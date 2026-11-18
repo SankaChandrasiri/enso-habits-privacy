@@ -668,7 +668,10 @@ const P = {
 const blankTask = day => ({ id: uid(), title: "", day, time: -1, place: "", estimate: 0, actual: 0, done: false, letGo: false, reminder: true });
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
-const blankHabit = (i = 0) => ({ id: uid(), name: "", identity: "", anchor: "", tinyVersion: "", fullVersion: "", place: "", obstacle: "", backup: "", colorIndex: i % CFG.colors.length, reminderOn: false, reminderHour: 8, reminderMinute: 0, createdDay: todayEpoch(), log: {}, strength: [], graduatedDay: null, icon: "spark", subtasks: [], subLog: {}, days: [], perWeek: 0 });
+const blankHabit = (i = 0) => ({ id: uid(), name: "", identity: "", anchor: "", tinyVersion: "", fullVersion: "", place: "", obstacle: "", backup: "", colorIndex: i % CFG.colors.length, reminderOn: false, reminderHour: 8, reminderMinute: 0, createdDay: todayEpoch(), log: {}, strength: [], graduatedDay: null, icon: "spark", subtasks: [], subLog: {}, days: [], perWeek: 0, goalDays: 0 });
+// Journey lengths from habit-formation research: Lally et al. 2010 (median 66 days, range 18-254) and
+// Singh et al. 2024 (medians 59-66 days, means 106-154, range 4-335). Same as the Android app's AppConfig.JOURNEYS.
+const JOURNEYS = [[66, "66 days", "The typical time in studies. A good start for most habits."], [100, "100 days", "Closer to the average once slower habits are counted. Good for exercise or harder changes."], [254, "254 days", "The slowest case in the main study. For a big change, or if earlier tries didn't stick."]];
 const defaultSettings = () => ({ userName: "", focusLimit: CFG.focusLimit, celebration: 1, haptics: true, taperReminders: true, dynamicColor: false, themeMode: 0, accent: 0, treeGoal: 1000, treeShape: "Round", treeLeaf: "Sage", treeFlower: "Pink", treeFruit: "Apple", treeBack: true, planReminderOn: false, planHour: 20, planMinute: 30, focusMinutes: 25, breakMinutes: 5, closedDay: null, lastReviewDay: null, onboarded: true });
 
 function sampleData() {
@@ -693,7 +696,7 @@ function sampleData() {
     tk("Answer emails", t - 4, { estimate: 30, actual: 35, done: true }),
   ];
   const wins = [{ day: t - 1, text: "Finished the first draft of the report", sample: true }, { day: t - 2, text: "Walked after lunch every day this week", sample: true }];
-  return { habits: [read, morning, walk], settings: defaultSettings(), reviews: [], tasks, wins, focus: null };
+  return { habits: [read, morning, walk], settings: defaultSettings(), reviews: [], tasks, wins, focus: null, deleted: [] };
 }
 
 function normalize(o) {
@@ -713,19 +716,20 @@ function normalize(o) {
     b.subLog = {}; for (const k in (h.subLog || {})) if (Array.isArray(h.subLog[k])) b.subLog[+k] = h.subLog[k].map(String);
     return b;
   });
-  for (const h of habits) h.perWeek = Math.max(0, Math.min(6, +h.perWeek || 0));
+  for (const h of habits) { h.perWeek = Math.max(0, Math.min(6, +h.perWeek || 0)); h.goalDays = Math.max(0, Math.min(1000, +h.goalDays || 0)); }
   const num = (v, d, lo, hi) => { v = +v; return isFinite(v) ? Math.max(lo, Math.min(hi, Math.round(v))) : d; };
   const tasks = (o && Array.isArray(o.tasks) ? o.tasks : []).filter(x => x && x.title).map(x => ({
     id: String(x.id || uid()), title: String(x.title), day: num(x.day, todayEpoch(), 0, 1e6), time: num(x.time, -1, -1, 1439), place: String(x.place || ""),
     estimate: num(x.estimate, 0, 0, 1440), actual: num(x.actual, 0, 0, 1440), done: !!x.done, letGo: !!x.letGo, reminder: x.reminder !== false, sample: !!x.sample }));
   const wins = (o && Array.isArray(o.wins) ? o.wins : []).filter(w => w && w.text).map(w => ({ day: +w.day, text: String(w.text), sample: !!w.sample }));
   const f = o && o.focus, focus = f && f.taskId ? { taskId: String(f.taskId), startMillis: +f.startMillis || 0, minutes: num(f.minutes, 25, 1, 180) } : null;
-  return { habits, settings: st, reviews: Array.isArray(o && o.reviews) ? o.reviews : [], tasks, wins, focus };
+  const deleted = (o && Array.isArray(o.deleted) ? o.deleted : []).map(String);
+  return { habits, settings: st, reviews: Array.isArray(o && o.reviews) ? o.reviews : [], tasks, wins, focus, deleted };
 }
 function toExport(d) {
   const clean = x => { const c = Object.assign({}, x); delete c.sample; return c; };
   return { format: "enso-habits", version: 1, settings: d.settings, reviews: d.reviews,
-    tasks: d.tasks.map(clean), wins: d.wins.map(clean), focus: d.focus || undefined,
+    tasks: d.tasks.map(clean), wins: d.wins.map(clean), focus: d.focus || undefined, deleted: d.deleted || [],
     habits: d.habits.map(h => { const c = Object.assign({}, h); delete c.sample; if (c.graduatedDay == null) delete c.graduatedDay; return c; }) };
 }
 
@@ -748,7 +752,83 @@ async function flush() {
   store.writing = false;
   if (store.again) { store.again = false; flush(); }
 }
-function save() { writeLocal(); clearTimeout(store.timer); store.timer = setTimeout(flush, 700); }
+function save() { writeLocal(); clearTimeout(store.timer); store.timer = setTimeout(flush, 700); if (SYNC.user) syncUpload(false); }
+function tomb(ids) { data.deleted = [...new Set((data.deleted || []).concat(ids))].slice(-1000); }
+
+/* ===================== Sync with the Android app (Firebase; only in the copy hosted outside Claude) =====================
+   Setup: put the Firebase web config in firebase-config.json next to this page (see the Android repository README).
+   Each person has one private Firestore document, users/{uid}, with the whole backup JSON. */
+const SYNC = { on: false, user: null, status: "", fb: null, ref: null, unsub: null, last: null, timer: null };
+function setSync(m) { SYNC.status = m; const el = document.getElementById("sync-st"); if (el) el.textContent = m; }
+async function syncInit() {
+  if (window.claude) return;   // inside Claude, habits already follow the Claude account
+  let cfg = null;
+  try { const r = await fetch("firebase-config.json", { cache: "no-store" }); if (r.ok) cfg = await r.json(); } catch {}
+  if (!cfg || !cfg.apiKey || !cfg.projectId || !cfg.appId) return;
+  try {
+    const base = "https://www.gstatic.com/firebasejs/13.2.0/";
+    const [App, A, F] = await Promise.all([import(base + "firebase-app.js"), import(base + "firebase-auth.js"), import(base + "firebase-firestore.js")]);
+    const app = App.initializeApp(cfg);
+    SYNC.fb = { A, F, auth: A.getAuth(app), db: F.getFirestore(app) }; SYNC.on = true;
+    A.onAuthStateChanged(SYNC.fb.auth, u => { SYNC.user = u; if (u) syncStart(); else syncStop(); render(); });
+  } catch (e) { SYNC.on = false; console.warn("Sync unavailable", e); }
+}
+function syncStart() {
+  const { F, db } = SYNC.fb;
+  syncStop(); SYNC.ref = F.doc(db, "users", SYNC.user.uid); SYNC.last = null; setSync("Connecting…");
+  // Sample habits are only for looking around, so they never go to the cloud.
+  if (data.habits.some(h => h.sample) || data.tasks.some(x => x.sample)) {
+    data.habits = data.habits.filter(h => !h.sample); data.tasks = data.tasks.filter(x => !x.sample); data.wins = data.wins.filter(x => !x.sample);
+    if (!data.habits.length) data.reviews = [];
+    writeLocal();
+  }
+  SYNC.unsub = F.onSnapshot(SYNC.ref, snap => {
+    if (snap.metadata.hasPendingWrites) return;
+    const json = snap.exists() ? snap.data().json : null;
+    if (!json) { syncUpload(true); return; }                  // first time: put this browser's habits in the cloud
+    let cloud; try { cloud = normalize(JSON.parse(json)); } catch { return; }
+    const merged = mergeData(data, cloud);
+    const cj = JSON.stringify(toExport(cloud)), mj = JSON.stringify(toExport(merged));
+    SYNC.last = cj;
+    if (mj !== JSON.stringify(toExport(data))) { data = merged; writeLocal(); clearTimeout(store.timer); store.timer = setTimeout(flush, 700); applyTheme(); render(); }
+    if (mj !== cj) syncUpload(true); else setSync("Synced with the Android app");
+  }, err => setSync("Sync stopped: " + err.message));
+}
+function syncStop() { if (SYNC.unsub) SYNC.unsub(); SYNC.unsub = null; }
+function syncUpload(now) {
+  clearTimeout(SYNC.timer);
+  SYNC.timer = setTimeout(async () => {
+    if (!SYNC.user || !SYNC.ref) return;
+    const json = JSON.stringify(toExport(data)); if (json === SYNC.last) return; SYNC.last = json;
+    try { await SYNC.fb.F.setDoc(SYNC.ref, { json, updatedAt: Date.now(), by: "web" }, { merge: true }); setSync("Synced with the Android app"); }
+    catch (e) { setSync("Couldn't save to the cloud: " + e.message); }
+  }, now ? 0 : 1500);
+}
+async function syncSignIn() {
+  try { await SYNC.fb.A.signInWithPopup(SYNC.fb.auth, new SYNC.fb.A.GoogleAuthProvider()); }
+  catch (e) { if (e && e.code !== "auth/popup-closed-by-user") toast("Google sign-in didn't work: " + (e.message || e)); }
+}
+function syncSignOut() { syncStop(); if (SYNC.fb) SYNC.fb.A.signOut(SYNC.fb.auth); SYNC.user = null; }
+
+/* Same rules as the Android app's logic/Merge.kt: keep check-ins from both sides; for the same item the cloud copy wins. */
+function mergeData(local, cloud) {
+  const uniq = a => [...new Set(a)], pref = cloud, other = local;
+  const deleted = uniq((pref.deleted || []).concat(other.deleted || [])).slice(-1000), gone = new Set(deleted);
+  const byId = (k, fn) => uniq(pref[k].map(x => x.id).concat(other[k].map(x => x.id))).filter(id => !gone.has(id)).map(id => {
+    const a = pref[k].find(x => x.id === id), b = other[k].find(x => x.id === id);
+    return a && b ? fn(a, b) : (a || b);
+  });
+  const habits = byId("habits", (a, b) => {
+    const c = Object.assign({}, a, { log: {}, subLog: {} });
+    for (const k of uniq(Object.keys(a.log).concat(Object.keys(b.log)))) { const v = Math.max(+a.log[k] || 0, +b.log[k] || 0); if (v > 0) c.log[k] = v; }
+    for (const k of uniq(Object.keys(a.subLog).concat(Object.keys(b.subLog)))) c.subLog[k] = uniq((a.subLog[k] || []).concat(b.subLog[k] || []));
+    c.strength = a.strength.concat(b.strength.filter(e => !a.strength.some(x => x.day === e.day))).sort((x, y) => x.day - y.day);
+    return c;
+  });
+  const tasks = byId("tasks", (a, b) => Object.assign({}, a, { actual: Math.max(a.actual, b.actual) }));
+  const byDay = k => pref[k].concat(other[k].filter(w => !pref[k].some(x => x.day === w.day))).sort((x, y) => y.day - x.day);
+  return { habits, settings: Object.assign({}, pref.settings), reviews: byDay("reviews"), tasks, wins: byDay("wins"), focus: pref.focus || null, deleted };
+}
 
 async function connect() {
   if (!window.claude || !window.claude.use) return;
@@ -1021,6 +1101,8 @@ function viewEdit() {
     html += `<h2>Set it up to succeed</h2><p class="muted">Same place, a gentle cue, and a backup plan for the day things go wrong.</p>${f("place", "Where? (optional)", "in the living room chair")}
       <div class="field"><span>Which days?</span><div class="chips"><button class="pick${!(h.perWeek > 0) ? " on" : ""}" data-act="pw" data-v="0">Set days</button><button class="pick${h.perWeek > 0 ? " on" : ""}" data-act="pw" data-v="${h.perWeek || 3}">Any days, a number per week</button></div>
       ${h.perWeek > 0 ? `<div class="daypick">${[1, 2, 3, 4, 5, 6].map(n => `<button class="pick${h.perWeek === n ? " on" : ""}" data-act="pw" data-v="${n}">${n}</button>`).join("")}</div><p class="small muted">${h.perWeek} ${h.perWeek === 1 ? "time" : "times"} a week, on any days. One busy day can't spoil the week; only a week that falls short counts as missed.</p></div>` : `<div class="daypick">${["M","T","W","T","F","S","S"].map((l, i) => `<button class="pick${!h.days.length || h.days.includes(i) ? " on" : ""}" data-act="wday" data-i="${i}" aria-pressed="${!h.days.length || h.days.includes(i)}" aria-label="${WDAYS[i]}">${l}</button>`).join("")}</div><p class="small muted">${!h.days.length ? "Every day. Daily habits form fastest." : `${h.days.length} days a week. Other days are rest days and never count as missed.`}</p></div>`}
+      <div class="field"><span>How long is the journey?</span><div class="chips">${JOURNEYS.map(([d, l]) => `<button class="pick${h.goalDays === d ? " on" : ""}" data-act="journey" data-v="${d}">${l}</button>`).join("")}<button class="pick${!h.goalDays ? " on" : ""}" data-act="journey" data-v="0">Open-ended</button></div>
+        <p class="small muted">${(JOURNEYS.find(j => j[0] === h.goalDays) || [0, 0, "No fixed end. The tree follows the length set in Profile, and the weekly check tells you when it feels automatic."])[2]} In studies, habits took 18 to 254 days to become automatic, with a median of 66. The popular "21 days" has no research behind it, and missing a single day didn't hurt.</p></div>
       <div class="field"><span>Colour</span><div class="swatches">${CFG.colors.map((c, i) => `<button class="sw${h.colorIndex === i ? " on" : ""}" style="--c:${c}" data-act="color" data-i="${i}" aria-label="Colour ${i + 1}"></button>`).join("")}</div></div>
       <div class="card stack" style="gap:8px"><div class="toggle"><div class="grow"><b>Cue reminder</b><div class="small muted">Rings in the Android app, just after your anchor. Skipped on days you've already done it.</div></div><button class="switch${h.reminderOn ? " on" : ""}" data-act="rem" role="switch" aria-checked="${h.reminderOn}" aria-label="Cue reminder"></button></div>
       ${h.reminderOn ? `<label class="field"><span>Around</span><input class="input" type="time" id="f-time" data-field="time" value="${hh}"></label>` : ""}</div>
@@ -1053,7 +1135,7 @@ function viewDetail(id) {
     html += `<div class="card stack" style="gap:8px"><div class="row"><b class="grow">Today's steps</b><b class="hc-text">${sd} of ${h.subtasks.length}</b></div><div class="steps-bar">${h.subtasks.map((_, i) => `<i class="${i < sd ? "on" : ""}"></i>`).join("")}</div><div>${h.subtasks.map(s => stepRow(h, t, s)).join("")}</div></div>`;
   }
   html += `<div class="tiles num"><div class="tile"><b>${S.inLast(h, 30, t)}/${S.window(h, 30, t)}</b><span>last 30 days</span></div><div class="tile"><b>${S.run(h, t)}</b><span>current run</span></div><div class="tile"><b>${S.best(h)}</b><span>best run</span></div><div class="tile"><b>${n}</b><span>total days</span></div></div>`;
-  { const ts = data.settings, tg = S.growth(h, t, ts.treeBack, ts.treeGoal), st = TREE.stageOf(tg / ts.treeGoal), nxs = TREE.STAGES[TREE.STAGES.indexOf(st) + 1];
+  { const ts = Object.assign({}, data.settings, { treeGoal: h.goalDays || data.settings.treeGoal }), tg = S.growth(h, t, ts.treeBack, ts.treeGoal), st = TREE.stageOf(tg / ts.treeGoal), nxs = TREE.STAGES[TREE.STAGES.indexOf(st) + 1];
     html += `<div class="card stack" style="gap:10px"><div class="tree-box"><canvas class="tree" data-key="${h.id}" data-f="${tg / ts.treeGoal}" width="360" height="300" role="img" aria-label="Habit tree, step ${tg} of ${ts.treeGoal}: ${st[0]}"></canvas></div>
       <div class="row"><b class="grow">${st[0]}</b><b class="hc-text num">Step ${tg} of ${ts.treeGoal}</b></div>
       <div class="small muted">${nxs ? `${Math.max(1, Math.ceil(nxs[1] * ts.treeGoal) - tg)} more steps to ${nxs[0].toLowerCase()}.` : "Goal reached. The sun is out."} ${ts.treeBack ? "A day done is one step forward; a planned day missed is one step back." : "Every day done is one step forward."}</div></div>`; }
@@ -1165,7 +1247,7 @@ function viewProfile() {
   const seg = (key, labels) => `<div class="chips">${labels.map((l, i) => `<button class="pick${s[key] === i ? " on" : ""}" data-act="set" data-k="${key}" data-v="${i}">${l}</button>`).join("")}</div>`;
   const acct = me.signedIn
     ? `<b>Signed in with your Claude account</b><div class="small muted">Your habits are private to you and follow you to any device where you open this page.</div>`
-    : `<b>Saved on this device</b><div class="small muted">Your habits stay in this browser. Use Save backup file to move them to another device or to the Android app.</div>`;
+    : `<b>Saved on this device</b><div class="small muted">Your habits stay in this browser. Use Save backup file, or sync below, to move them to another device or the Android app.</div>`;
   return pageHead("Profile") + `<main class="stack">
     <div class="card stack" style="gap:14px"><div class="row"><span class="avatar lg">${esc(initials())}</span><div class="grow"><div style="font-size:18px;font-weight:800">${esc(displayName() || "You")}</div>${acct}</div></div>
       <div class="tiles num" style="--n:3"><div class="tile" style="box-shadow:none;background:var(--surface-2)"><b>${hs.filter(h => h.graduatedDay == null).length}</b><span>active</span></div><div class="tile" style="box-shadow:none;background:var(--surface-2)"><b>${hs.filter(h => h.graduatedDay != null).length}</b><span>graduated</span></div><div class="tile" style="box-shadow:none;background:var(--surface-2)"><b>${S.checkIns(hs)}</b><span>check-ins</span></div></div></div>
@@ -1173,6 +1255,9 @@ function viewProfile() {
     <div class="card stack" style="gap:8px"><div class="eyebrow" style="color:var(--primary)">Focus</div><div>Active habits at once: <b class="num" id="s-fl">${s.focusLimit}</b></div><div class="small muted">Fewer habits, done consistently, beat a long list. Three is a good start.</div><input type="range" id="s-focus" min="1" max="${CFG.maxFocus}" step="1" value="${s.focusLimit}" aria-label="Focus limit"></div>
     <div class="card stack" style="gap:10px"><div class="eyebrow" style="color:var(--primary)">Celebrations</div>${seg("celebration", ["Subtle", "Standard", "Festive"])}
       <div class="toggle"><div class="grow">Vibrate on check-in (phones that allow it)</div><button class="switch${s.haptics ? " on" : ""}" data-act="tog" data-k="haptics" role="switch" aria-checked="${s.haptics}" aria-label="Vibrate on check-in"></button></div></div>
+    ${SYNC.on ? `<div class="card stack" style="gap:10px"><div class="eyebrow" style="color:var(--primary)">Sync with the Android app</div>
+      ${SYNC.user ? `<div><b>${esc(SYNC.user.email || "Signed in")}</b></div><div class="small muted" id="sync-st">${esc(SYNC.status)}</div><div><button class="btn outline" data-act="sync-out">Sign out of sync</button></div>`
+        : `<div class="small muted">Sign in with the same Google account you use in the Android app to see the same habits on both. The first time, habits from both are combined.</div><div><button class="btn" data-act="sync-in">Sign in with Google to sync</button></div>`}</div>` : ""}
     <div class="card stack" style="gap:10px"><div class="eyebrow" style="color:var(--primary)">Daily planning</div>
       <div class="field"><span>Focus session length</span><div class="chips">${PCFG.focus.map(m => `<button class="pick${s.focusMinutes === m ? " on" : ""}" data-act="set" data-k="focusMinutes" data-v="${m}">${m} min</button>`).join("")}</div></div>
       <div class="field"><span>Break after a session</span><div class="chips">${PCFG.breaks.map(m => `<button class="pick${s.breakMinutes === m ? " on" : ""}" data-act="set" data-k="breakMinutes" data-v="${m}">${m} min</button>`).join("")}</div></div>
@@ -1344,6 +1429,9 @@ document.addEventListener("click", e => {
     case "tpl": { const tp = CFG.templates[+el.dataset.i]; Object.assign(ui.draft, { name: tp[0], icon: tp[1], identity: tp[2], anchor: tp[3], tinyVersion: tp[4], fullVersion: tp[5], subtasks: tp[6].map(x => ({ id: uid(), title: x })) }); ui.err = ""; render(); break; }
     case "wday": { const i = +el.dataset.i, cur = ui.draft.days.length ? ui.draft.days.slice() : [0, 1, 2, 3, 4, 5, 6]; const nx = (cur.includes(i) ? cur.filter(x => x !== i) : cur.concat(i)).sort(); if (nx.length) ui.draft.days = nx.length === 7 ? [] : nx; render(); break; }
     case "push": if (el.dataset.r === "plan") ui.win = null; push({ r: el.dataset.r }); break;
+    case "sync-in": syncSignIn(); break;
+    case "sync-out": syncSignOut(); render(); toast("Sync is off. Your habits stay in this browser."); break;
+    case "journey": ui.draft.goalDays = +el.dataset.v; render(); break;
     case "pw": ui.draft.perWeek = +el.dataset.v; if (ui.draft.perWeek) ui.draft.days = []; render(); break;
     case "task-add": ui.tdraft = blankTask(+el.dataset.d); push({ r: "task" }); setTimeout(() => { const i = document.getElementById("tk-title"); if (i) i.focus(); }); break;
     case "task-open": { const x = data.tasks.find(y => y.id === el.dataset.t); if (x) { ui.tdraft = Object.assign({}, x); push({ r: "task", id: x.id }); } break; }
@@ -1355,7 +1443,7 @@ document.addEventListener("click", e => {
     case "ttime-any": ui.tdraft.time = -1; render(); break;
     case "test": ui.tdraft.estimate = +el.dataset.v; render(); break;
     case "task-save": { const x = ui.tdraft; if (!x.title.trim()) break; x.title = x.title.trim(); x.place = x.place.trim(); const i = data.tasks.findIndex(y => y.id === x.id); if (i >= 0) data.tasks[i] = x; else data.tasks.push(x); save(); pop(); break; }
-    case "task-del": openModal({ title: "Delete this task?", ok: "Delete", run: () => { const id = ui.tdraft.id; if (data.focus && data.focus.taskId === id) data.focus = null; data.tasks = data.tasks.filter(y => y.id !== id); save(); ui.stack.pop(); } }); break;
+    case "task-del": openModal({ title: "Delete this task?", ok: "Delete", run: () => { const id = ui.tdraft.id; if (data.focus && data.focus.taskId === id) data.focus = null; data.tasks = data.tasks.filter(y => y.id !== id); tomb([id]); save(); ui.stack.pop(); } }); break;
     case "focus-len": ui.focusLen = +el.dataset.v; render(); break;
     case "focus-start": { if (data.focus) stopFocus(); const m = ui.focusLen || data.settings.focusMinutes; data.focus = { taskId: route().id, startMillis: Date.now(), minutes: m }; data.settings.focusMinutes = m; ui.breakEnd = 0; save(); render(); tick(); break; }
     case "focus-stop": stopFocus(); render(); break;
@@ -1383,7 +1471,7 @@ document.addEventListener("click", e => {
     case "new": {
       const active = data.habits.filter(h => h.graduatedDay == null).length;
       if (active >= data.settings.focusLimit) { toast(`Focus on ${data.settings.focusLimit} habits at a time. Graduate one, or raise the limit in Profile.`); break; }
-      ui.draft = blankHabit(data.habits.length); ui.step = 0; ui.isNew = true; push({ r: "edit" }); break;
+      ui.draft = Object.assign(blankHabit(data.habits.length), { goalDays: 66 }); ui.step = 0; ui.isNew = true; push({ r: "edit" }); break;
     }
     case "clear-samples": data.tasks = data.tasks.filter(x => !x.sample); data.wins = data.wins.filter(x => !x.sample); data.habits = data.habits.filter(h => !h.sample); data.reviews = []; data.settings.lastReviewDay = null; save(); toast("Samples cleared. Create your first habit."); break;
     case "icon": ui.draft.icon = el.dataset.v; render(); break;
@@ -1408,7 +1496,7 @@ document.addEventListener("click", e => {
     case "edit": case "fix": {
       ui.draft = JSON.parse(JSON.stringify(habit(id))); ui.step = a === "fix" ? +el.dataset.s : 0; ui.isNew = false; push({ r: "edit" }); break;
     }
-    case "del": { const h = habit(id); openModal({ title: `Delete ${h.name}?`, body: `<p class="muted">Its whole history will be removed. Graduating keeps the history instead.</p>`, ok: "Delete", danger: true, run: () => { data.habits = data.habits.filter(x => x.id !== h.id); save(); ui.stack = []; } }); break; }
+    case "del": { const h = habit(id); openModal({ title: `Delete ${h.name}?`, body: `<p class="muted">Its whole history will be removed. Graduating keeps the history instead.</p>`, ok: "Delete", danger: true, run: () => { data.habits = data.habits.filter(x => x.id !== h.id); tomb([h.id]); save(); ui.stack = []; } }); break; }
     case "grad": { const h = habit(id); openModal({ title: `Graduate ${h.name}?`, cancel: "Not yet", body: `<p class="muted">It moves to your Hall of Mastery and reminders stop, freeing a slot for a new habit. You can bring it back any time.</p>`, ok: "Graduate", run: () => { h.graduatedDay = t; save(); ui.stack = []; ui.tab = "way"; setTimeout(() => celebrate("Graduated", h.name, "This habit now runs on its own. It lives in your Hall of Mastery."), 50); } }); break; }
     case "restore": { const h = habit(id); h.graduatedDay = null; save(); render(); toast(`${h.name} is back on your Today list.`); break; }
     case "day": { const h = habit(id), d = +el.dataset.d, l = S.level(h, d); setLog(h, d, l === 0 ? 1 : l === 1 && h.fullVersion ? 2 : 0); render(); break; }
@@ -1443,11 +1531,12 @@ document.addEventListener("click", e => {
       catch { toast("Backup not saved."); }
     })(); break;
     case "import": doImport(document.getElementById("s-paste").value); break;
-    case "reset": openModal({ title: "Clear all habits?", body: `<p class="muted">This removes every habit, log and review. Save a backup first if you might want them.</p>`, ok: "Clear", danger: true, run: () => { data.habits = []; data.reviews = []; data.tasks = []; data.wins = []; data.focus = null; data.settings.lastReviewDay = null; save(); ui.tab = "today"; } }); break;
+    case "reset": openModal({ title: "Clear all habits?", body: `<p class="muted">This removes every habit, log and review. Save a backup first if you might want them.</p>`, ok: "Clear", danger: true, run: () => { tomb(data.habits.map(x => x.id).concat(data.tasks.map(x => x.id))); data.habits = []; data.reviews = []; data.tasks = []; data.wins = []; data.focus = null; data.settings.lastReviewDay = null; save(); ui.tab = "today"; } }); break;
     case "wipe": openModal({ title: "Delete my data?", body: `<p class="muted">Every habit, log, review and setting is deleted from ${store.mode === "db" ? "your account and " : ""}this browser. This can't be undone.</p>`, ok: "Delete", danger: true, run: async () => {
       try { localStorage.removeItem(LOCAL_KEY); } catch {}
       if (store.ref) { try { await store.ref.delete(); } catch {} }
-      data = { habits: [], settings: defaultSettings(), reviews: [], tasks: [], wins: [], focus: null }; applyTheme(); ui.tab = "today"; ui.stack = []; render(); toast("Your data was deleted");
+      if (SYNC.user) { try { await SYNC.fb.F.deleteDoc(SYNC.ref); } catch {} syncSignOut(); }
+      data = { habits: [], settings: defaultSettings(), reviews: [], tasks: [], wins: [], focus: null, deleted: [] }; applyTheme(); ui.tab = "today"; ui.stack = []; render(); toast("Your data was deleted");
     } }); break;
   }
 });
@@ -1496,5 +1585,6 @@ applyTheme();
 render();
 tick();
 connect();
+syncInit();
 })();
 </script>
