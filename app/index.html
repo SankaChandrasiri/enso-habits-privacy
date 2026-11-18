@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3B4BA8">
+<title>Ensō Habits</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Shippori+Mincho:wght@600;700&display=swap">
+<style>
+/* Layout: one phone-width app column; white cards on a cool grey ground; bottom tab bar; floating "New habit" button above it. */
+:root {
+  --bg: #F3F4F9; --surface: #FFFFFF; --surface-2: #EEEFF6; --surface-3: #E3E5F0; --line: #DCDEEC;
+  --ink: #161A30; --muted: #5A5E78; --primary: #3949AB; --on-primary: #FFFFFF;
+  --primary-soft: #E0E4FF; --on-primary-soft: #11206E; --teal: #00897B; --gold: #D2931A; --warn: #8F600C;
+  --danger: #B3261E; --scrim: rgba(12, 14, 34, .55); --shadow: 0 1px 2px rgba(22,26,48,.04), 0 4px 14px rgba(22,26,48,.035);
+  --font: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --display: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
+  --r-lg: 24px; --r-md: 18px; --r-sm: 12px; --nav-h: 68px; --lift: 0%; --tint: 15%; --ease: cubic-bezier(.2, 0, 0, 1);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1019; --surface: #181B28; --surface-2: #202433; --surface-3: #2A2E40; --line: #2E3246;
+  --ink: #ECEDF8; --muted: #A2A6C0; --primary: #B4BEFF; --on-primary: #0B1A78;
+  --primary-soft: #26338F; --on-primary-soft: #E1E5FF; --teal: #6ED5C5; --gold: #F2C46B; --warn: #F2C46B;
+  --danger: #FFB4AB; --scrim: rgba(0,0,0,.6); --shadow: none; --lift: 45%; --tint: 24%; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0E1019; --surface: #181B28; --surface-2: #202433; --surface-3: #2A2E40; --line: #2E3246;
+  --ink: #ECEDF8; --muted: #A2A6C0; --primary: #B4BEFF; --on-primary: #0B1A78;
+  --primary-soft: #26338F; --on-primary-soft: #E1E5FF; --teal: #6ED5C5; --gold: #F2C46B; --warn: #F2C46B;
+  --danger: #FFB4AB; --scrim: rgba(0,0,0,.6); --shadow: none; --lift: 45%; --tint: 24%; color-scheme: dark }
+
+/* Theme colours chosen in Profile. light-dark() follows the active light or dark scheme. */
+:root[data-accent="1"] { --primary: light-dark(#0F766E, #7FD6C9); --on-primary: light-dark(#FFFFFF, #00382F); --primary-soft: light-dark(#D3EFEA, #0B4F49); --on-primary-soft: light-dark(#06302C, #D3EFEA) }
+:root[data-accent="2"] { --primary: light-dark(#3F7A45, #A3D6A0); --on-primary: light-dark(#FFFFFF, #0C3912); --primary-soft: light-dark(#DDEEDB, #24522A); --on-primary-soft: light-dark(#12301A, #DDEEDB) }
+:root[data-accent="3"] { --primary: light-dark(#A8476A, #F2B3C6); --on-primary: light-dark(#FFFFFF, #4A1027); --primary-soft: light-dark(#F9DEE6, #6E2A44); --on-primary-soft: light-dark(#3D1022, #F9DEE6) }
+:root[data-accent="4"] { --primary: light-dark(#8A6410, #EBC56F); --on-primary: light-dark(#FFFFFF, #3A2900); --primary-soft: light-dark(#F5E6BF, #5A4000); --on-primary-soft: light-dark(#2E2000, #F5E6BF) }
+:root[data-accent="5"] { --primary: light-dark(#4B5B73, #B8C4D8); --on-primary: light-dark(#FFFFFF, #1C2636); --primary-soft: light-dark(#DEE4EE, #344054); --on-primary-soft: light-dark(#18212F, #DEE4EE) }
+
+* { box-sizing: border-box }
+html, body { min-height: 100% }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); -webkit-font-smoothing: antialiased }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg) }
+button, input, textarea { font: inherit; color: inherit }
+button { cursor: pointer }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px }
+h1, h2, h3 { margin: 0; text-wrap: balance }
+p { margin: 0 }
+
+.app { max-width: 460px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 calc(var(--nav-h) + 96px + env(safe-area-inset-bottom, 0px)) }
+.app.nonav { padding-block-end: 120px }
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; align-items: center; gap: 4px; padding-block: 12px 8px }
+.topbar .t { flex: 1; min-width: 0 }
+.topbar h1 { font-size: 18px; font-weight: 700 }
+.page-h { padding-block: 22px 6px }
+.page-h h1 { font-size: 26px; font-weight: 800; letter-spacing: -.02em }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent; display: grid; place-items: center; color: var(--ink); flex: none }
+.icon-btn:hover { background: var(--surface-2) }
+.icon-btn svg { width: 22px; height: 22px }
+.stack { display: flex; flex-direction: column; gap: 14px }
+.row { display: flex; align-items: center; gap: 12px }
+.grow { flex: 1; min-width: 0 }
+.muted { color: var(--muted) }
+.small { font-size: 13px }
+.num { font-variant-numeric: tabular-nums }
+.h3 { font-size: 15.5px; font-weight: 700 }
+
+.card { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 18px; border: 1px solid transparent }
+.card.inset { background: var(--surface-2); box-shadow: none }
+.card.soft { background: var(--primary-soft); color: var(--on-primary-soft); box-shadow: none }
+.card.soft .muted { color: var(--on-primary-soft); opacity: .8 }
+button.card { text-align: left; width: 100%; font: inherit; color: inherit }
+
+.btn { border: 0; border-radius: 999px; padding: 0 20px; height: 46px; font-weight: 700; background: var(--primary); color: var(--on-primary); display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .15s }
+.btn:active { transform: scale(.98) }
+.btn.tonal { background: var(--primary-soft); color: var(--on-primary-soft) }
+.btn.outline { background: transparent; color: var(--primary); box-shadow: inset 0 0 0 1.5px var(--line) }
+.btn.text { background: transparent; color: var(--primary); padding: 0 10px; height: 38px }
+.btn.danger-text { background: transparent; color: var(--danger); padding: 0 10px; height: 38px }
+.btn.block { width: 100% }
+.btn svg { width: 18px; height: 18px }
+
+/* Header + week strip */
+.hello { display: flex; align-items: center; gap: 12px; padding-block: 22px 14px }
+.hello h1 { font-size: 24px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2 }
+.avatar { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--primary-soft); color: var(--on-primary-soft); font-weight: 800; display: grid; place-items: center; flex: none; font-size: 15px }
+.avatar.lg { width: 60px; height: 60px; font-size: 21px }
+.weekcard { padding: 10px 10px 16px }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px }
+.prog { padding: 12px 8px 0; display: flex; flex-direction: column; gap: 8px }
+.prog .bar-fill.full { background: var(--gold) }
+.wd { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 0; border-radius: 16px }
+.wd.today { background: var(--primary-soft); color: var(--on-primary-soft) }
+.wd .l { font-size: 11px; font-weight: 700; color: var(--muted) }
+.wd.today .l { color: inherit }
+.wd .r { position: relative; width: 34px; height: 34px; display: grid; place-items: center }
+.wd .r svg { position: absolute; inset: 0; transform: rotate(-90deg) }
+.wd .r circle { fill: none; stroke-width: 3.5 }
+.wd .r .tr { stroke: var(--surface-3) }
+.wd .r .br { stroke: var(--primary); stroke-linecap: round }
+.wd .r .br.full { stroke: var(--gold) }
+.wd .r b { font-size: 12.5px; font-weight: 700 }
+.wd.fut .r b { color: var(--muted); font-weight: 500 }
+
+.summary { display: flex; align-items: center; gap: 16px; padding: 4px }
+.ring { width: 64px; height: 64px; flex: none; position: relative; display: grid; place-items: center }
+.ring svg { position: absolute; inset: 0; transform: rotate(-90deg) }
+.ring circle { fill: none; stroke-width: 7 }
+.ring .track { stroke: var(--surface-3) }
+.ring .bar { stroke: var(--primary); stroke-linecap: round }
+.ring.full .bar { stroke: var(--gold) }
+.ring b { font-size: 15px; font-weight: 800 }
+
+/* Habit card */
+.habit { cursor: pointer; transition: border-color .2s }
+.habit:hover { border-color: var(--line) }
+.habit .top { display: flex; align-items: center; gap: 14px }
+.hicon { width: 46px; height: 46px; border-radius: 15px; flex: none; display: grid; place-items: center; background: color-mix(in oklab, var(--hc) var(--tint), transparent); color: color-mix(in oklab, var(--hc), white var(--lift)) }
+.hicon svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round }
+.hicon.lg { width: 58px; height: 58px; border-radius: 19px }
+.hicon.lg svg { width: 30px; height: 30px }
+.hicon.sm { width: 38px; height: 38px; border-radius: 12px }
+.hicon.sm svg { width: 20px; height: 20px }
+.habit .body { flex: 1; min-width: 0; transition: opacity .3s }
+.habit.done .body { opacity: .62 }
+.habit h3 { font-size: 16.5px; font-weight: 700 }
+.habit .recipe { color: var(--muted); font-size: 13.5px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.hc-text { color: color-mix(in oklab, var(--hc) 72%, var(--ink)) }
+.meta { font-size: 12px; font-weight: 600; margin-top: 3px; color: var(--muted) }
+.nudge { font-size: 12.5px; font-weight: 600; color: var(--warn); margin-top: 8px }
+.chip { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; padding: 2px 7px; border-radius: 999px; background: var(--surface-2); color: var(--muted); vertical-align: 2px; margin-left: 6px }
+.fullv { border: 0; background: none; padding: 8px 0 0; color: var(--primary); font-weight: 700; font-size: 13px }
+
+.steps-bar { display: flex; gap: 4px }
+.steps-bar i { flex: 1; height: 6px; border-radius: 3px; background: var(--surface-3); transition: background .3s }
+.steps-bar i.on { background: var(--hc) }
+.steps-head { display: flex; align-items: center; gap: 10px; margin-top: 12px; border: 0; background: none; width: 100%; padding: 4px 0; text-align: left }
+.steps-head svg { width: 20px; height: 20px; color: var(--muted); transition: transform .25s; flex: none }
+.steps-head[aria-expanded="true"] svg { transform: rotate(180deg) }
+.steps { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease }
+.steps.open { grid-template-rows: 1fr }
+.steps > div { overflow: hidden }
+.step-row { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; background: none; padding: 9px 4px; border-radius: 12px; text-align: left; font-size: 15px }
+.step-row:hover { background: var(--surface-2) }
+.box { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--line); flex: none; display: grid; place-items: center; transition: background .2s, border-color .2s }
+.box svg { width: 14px; height: 14px; stroke: #fff; stroke-width: 3.2; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .2s .05s }
+.step-row.on .box { background: var(--hc); border-color: var(--hc) }
+.step-row.on .box svg { stroke-dashoffset: 0 }
+.step-row.on span { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in oklab, var(--muted) 50%, transparent) }
+
+.check { width: 56px; height: 56px; border-radius: 50%; border: 0; padding: 0; background: transparent; position: relative; flex: none; transition: transform .16s var(--ease) }
+.check:active { transform: scale(.94) }
+.check svg { width: 56px; height: 56px; overflow: visible; display: block }
+.check .o { fill: none; stroke: var(--line); stroke-width: 3 }
+.check.on .o { stroke: var(--hc) }
+.check .f { fill: var(--hc); transform-origin: 28px 28px; transform: scale(0) }
+.check.on .f { transform: scale(1) }
+.check .tk { fill: none; stroke: #fff; stroke-width: 4.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1 }
+.check.on .tk { stroke-dashoffset: 0 }
+.check.pop .f { animation: fill .28s var(--ease) both }
+.check.pop .tk { animation: draw .22s .12s var(--ease) both }
+.burst { position: absolute; inset: 0; pointer-events: none }
+.burst i { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: var(--hc); animation: fly .5s var(--ease) both }
+.burst b { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--hc); animation: ripple .5s var(--ease) both }
+.burst i:nth-child(even) { background: var(--gold) }
+@keyframes fill { from { transform: scale(.4); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+@keyframes ripple { from { transform: scale(1); opacity: .45 } to { transform: scale(1.32); opacity: 0 } }
+@keyframes draw { from { stroke-dashoffset: 1 } to { stroke-dashoffset: 0 } }
+@keyframes fly { 0% { transform: translate(0,0); opacity: .8 } 100% { transform: translate(var(--dx), var(--dy)); opacity: 0 } }
+
+.banner { display: flex; gap: 12px; align-items: center }
+.wd { border: 0; background: none; font: inherit; color: inherit }
+button.wd:not(.fut):hover { background: var(--surface-2) }
+button.wd.today:hover { background: var(--primary-soft) }
+.daypick { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px }
+.daypick .pick { padding: 9px 0; text-align: center }
+.tpl { display: flex; gap: 8px; flex-wrap: wrap }
+.tpl .pick { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px 6px 8px }
+.tpl .pick svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round }
+.day.rest:not(.l1):not(.l2) { opacity: .45 }
+.toast { display: flex; align-items: center; gap: 12px }
+.toast button { border: 0; background: none; color: inherit; font-weight: 800; text-decoration: underline; padding: 4px; margin-left: auto; flex: none }
+
+.fab { position: fixed; z-index: 6; bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom, 0px)); right: max(calc(16px + env(safe-area-inset-right, 0px)), calc((100vw - 460px) / 2 + 16px)); height: 56px; padding: 0 22px 0 18px; border-radius: 18px; border: 0; background: var(--primary); color: var(--on-primary); font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 22px color-mix(in oklab, var(--primary) 30%, transparent) }
+.fab svg { width: 22px; height: 22px }
+
+/* Bottom navigation */
+.tabbar { position: fixed; z-index: 7; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px) }
+.tabbar > div { max-width: 460px; height: var(--nav-h); margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)) }
+.tab { border: 0; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12px; font-weight: 700; color: var(--muted) }
+.tab .pill { width: 60px; height: 30px; border-radius: 15px; display: grid; place-items: center; transition: background .25s }
+.tab svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round }
+.tab.on { color: var(--primary) }
+.task { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-radius: 12px; width: 100%; text-align: left; background: none; border: 0; color: inherit; font: inherit }
+.task + .task { border-top: 1px solid var(--line) }
+.task .tbox { width: 24px; height: 24px; border-radius: 8px; border: 2px solid var(--primary); display: grid; place-items: center; flex: none; background: none; color: var(--on-primary, #fff); padding: 0 }
+.task .tbox svg { width: 16px; height: 16px; opacity: 0 }
+.task .tbox.on { background: var(--primary) }
+.task .tbox.on svg { opacity: 1 }
+.task .tt { font-weight: 650 }
+.task.done .tt { text-decoration: line-through; color: var(--muted) }
+.task .play { width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--primary-soft); color: var(--on-primary-soft); display: grid; place-items: center; flex: none }
+.task .play svg { width: 18px; height: 18px }
+.mv { display: flex; align-items: center; gap: 6px; padding-top: 8px }
+.ring-big { position: relative; width: 240px; height: 240px; margin: 8px auto }
+.ring-big svg { width: 100%; height: 100%; transform: rotate(-90deg) }
+.ring-big circle { fill: none; stroke-width: 14 }
+.ring-big .tr { stroke: var(--surface-2) }
+.ring-big .fg { stroke: var(--primary); stroke-linecap: round; transition: stroke-dashoffset .9s linear }
+.ring-big.brk .fg { stroke: var(--teal) }
+.ring-big .lbl { position: absolute; inset: 0; display: grid; place-content: center; text-align: center }
+.ring-big .lbl b { font-size: 48px; font-weight: 300; font-variant-numeric: tabular-nums }
+.plan-step { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; margin-bottom: 4px }
+.plan-step i { font-style: normal; color: var(--primary) }
+.tab svg { transition: transform .28s var(--ease) }
+.tab.on svg { transform: scale(1.34) }
+.tab .pill { transition: background .25s, width .28s var(--ease), height .28s var(--ease) }
+.tab.on .pill { width: 68px; height: 36px; border-radius: 18px }
+.screen.from-right { animation: slideR .28s var(--ease) }
+.screen.from-left { animation: slideL .28s var(--ease) }
+@keyframes slideR { from { opacity: 0; transform: translateX(28px) } to { opacity: 1; transform: none } }
+@keyframes slideL { from { opacity: 0; transform: translateX(-28px) } to { opacity: 1; transform: none } }
+.tree-box { border-radius: var(--r-md); overflow: hidden }
+.tree-box canvas { display: block; width: 100%; height: auto; aspect-ratio: 360 / 300 }
+.swatch { display: inline-flex; align-items: center; gap: 7px }
+.swatch i { width: 14px; height: 14px; border-radius: 50%; background: var(--c); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12) }
+.tab.on .pill { background: var(--primary-soft); color: var(--on-primary-soft) }
+
+.toast { position: fixed; z-index: 30; left: 50%; bottom: calc(var(--nav-h) + 86px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(420px, calc(100vw - 32px)); background: var(--ink); color: var(--bg); padding: 12px 16px; border-radius: 14px; font-size: 14px; font-weight: 500; animation: rise .25s ease-out }
+@keyframes rise { from { opacity: 0; transform: translate(-50%, 8px) } to { opacity: 1; transform: translate(-50%, 0) } }
+
+.screen { animation: enter .24s var(--ease) }
+@keyframes enter { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+
+.empty { text-align: center; padding: 28px 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 10px }
+.empty h2 { font-size: 22px }
+
+.enso .ring-p, .enso .tick-p { fill: none; stroke-linecap: round; stroke-linejoin: round }
+.enso .ring-p { stroke: var(--primary) }
+.enso .tick-p { stroke: var(--gold) }
+.enso.drawin .ring-p { stroke-dasharray: 1; animation: drawr .9s .1s var(--ease) both }
+.enso.drawin .tick-p { stroke-dasharray: 1; animation: drawr .28s .95s var(--ease) both }
+@keyframes drawr { from { stroke-dashoffset: 1 } to { stroke-dashoffset: 0 } }
+
+/* Forms */
+.field { display: flex; flex-direction: column; gap: 6px }
+.field > span { font-size: 13px; font-weight: 600; color: var(--muted) }
+.input, textarea.input { width: 100%; min-height: 50px; border-radius: var(--r-sm); border: 1.5px solid var(--line); background: var(--surface); padding: 12px 14px; outline: none; transition: border-color .15s }
+.input:focus { border-color: var(--primary) }
+textarea.input { min-height: 84px; resize: vertical }
+.chips { display: flex; flex-wrap: wrap; gap: 8px }
+.pick { border: 1.5px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 12px; font-size: 13.5px; font-weight: 600; transition: background .15s, border-color .15s }
+.pick.on { background: var(--primary-soft); border-color: transparent; color: var(--on-primary-soft) }
+.icons { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px }
+.ipick { border: 0; background: none; padding: 4px; border-radius: 18px; display: grid; place-items: center; box-shadow: inset 0 0 0 0 var(--hc); transition: box-shadow .15s }
+.ipick.on { box-shadow: inset 0 0 0 2.5px var(--hc) }
+.swatches { display: flex; gap: 12px; flex-wrap: wrap }
+.accents { display: flex; gap: 14px; flex-wrap: wrap }
+.accents button { border: 0; background: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--muted) }
+.accents i { width: 40px; height: 40px; border-radius: 50%; background: var(--c); transition: box-shadow .15s }
+.accents button.on { color: var(--ink) }
+.accents button.on i { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5.5px var(--ink) }
+.sw { width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--c); transition: box-shadow .15s }
+.sw.on { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5.5px var(--ink) }
+.step-edit { display: flex; gap: 8px; align-items: center }
+.dots { display: flex; align-items: center; gap: 6px }
+.dots i { height: 8px; width: 8px; border-radius: 4px; background: var(--surface-3); transition: width .3s, background .3s }
+.dots i.on { background: var(--primary) }
+.dots i.cur { width: 28px }
+.step h2 { font-size: 22px; font-weight: 800 }
+.wizard-nav { position: fixed; z-index: 6; left: 0; right: 0; bottom: 0; background: var(--bg); border-top: 1px solid var(--line); padding-block: 12px calc(12px + env(safe-area-inset-bottom, 0px)) }
+.wizard-nav > div { max-width: 460px; margin: 0 auto; display: flex; justify-content: space-between; gap: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.err { color: var(--danger); font-weight: 600; font-size: 14px }
+.toggle { display: flex; align-items: center; gap: 12px }
+.switch { width: 52px; height: 32px; border-radius: 16px; border: 0; background: var(--surface-2); position: relative; flex: none; transition: background .2s; box-shadow: inset 0 0 0 2px var(--line) }
+.switch::after { content: ""; position: absolute; left: 6px; top: 8px; width: 16px; height: 16px; border-radius: 50%; background: var(--muted); transition: all .2s var(--ease) }
+.switch.on { background: var(--primary); box-shadow: none }
+.switch.on::after { left: 24px; top: 4px; width: 24px; height: 24px; background: var(--on-primary) }
+input[type=range] { width: 100%; accent-color: var(--primary) }
+
+/* Detail + insights */
+.tiles { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0,1fr)); gap: 8px }
+.tile { background: var(--surface); border-radius: var(--r-md); padding: 12px 4px; text-align: center; box-shadow: var(--shadow) }
+.tile b { display: block; font-size: 21px; font-weight: 800; color: var(--tc, var(--primary)) }
+.tile span { font-size: 11.5px; color: var(--muted) }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 6px }
+.cal .h { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted) }
+.day { aspect-ratio: 1; border: 0; border-radius: 10px; background: var(--surface-2); font-size: 12px; font-weight: 600; color: var(--muted); padding: 0; transition: background .2s, transform .15s }
+.day:active { transform: scale(.95) }
+.day.l1 { background: color-mix(in oklab, var(--hc) 55%, var(--surface)); color: #fff }
+.day.l2 { background: var(--hc); color: #fff }
+.day.part { background: color-mix(in oklab, var(--hc) 22%, var(--surface)); color: var(--ink) }
+.day.pre { opacity: .45 }
+.day.today { box-shadow: inset 0 0 0 2px var(--ink) }
+.day.fut { background: transparent; cursor: default }
+.bar-track { height: 6px; border-radius: 3px; background: var(--surface-3); overflow: hidden }
+.bar-fill { height: 100%; border-radius: 3px; background: var(--hc, var(--primary)); transition: width .5s var(--ease) }
+.chart { width: 100%; height: auto; display: block; overflow: visible }
+.chart .grid { stroke: var(--line); stroke-width: 1 }
+.chart .goal { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 5 5 }
+.chart .line { fill: none; stroke: color-mix(in oklab, var(--hc), white var(--lift)); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; animation: drawr .5s var(--ease) both }
+.chart .pt { fill: color-mix(in oklab, var(--hc), white var(--lift)) }
+.chart text { fill: var(--muted); font: 600 10.5px var(--font) }
+.chart text.strong { fill: var(--ink); font-weight: 800 }
+.chart .bar { transform-box: fill-box; transform-origin: bottom; animation: grow .45s var(--ease) both }
+@keyframes grow { from { transform: scaleY(0) } }
+.hm { width: 100%; height: auto; display: block }
+.hm text { fill: var(--muted); font: 600 9.5px var(--font) }
+.legend { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--muted) }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block }
+.mini { position: relative; width: 46px; height: 46px; display: grid; place-items: center; flex: none }
+.mini svg { position: absolute; inset: 0; transform: rotate(-90deg) }
+.mini circle { fill: none; stroke-width: 5 }
+.mini .tr { stroke: var(--surface-3) }
+.mini .br { stroke: color-mix(in oklab, var(--hc), white var(--lift)); stroke-linecap: round }
+.mini b { font-size: 11px; font-weight: 800 }
+
+.quote { font-family: var(--display); font-size: 23px; line-height: 1.35; font-weight: 700 }
+.mastery { background: color-mix(in oklab, var(--gold) 16%, var(--surface)) }
+
+.modal-wrap { position: fixed; inset: 0; z-index: 20; background: var(--scrim); display: grid; place-items: center; padding: 20px; animation: fade .18s ease-out }
+.modal { width: min(420px, 100%); max-height: calc(100vh - 40px); overflow: auto; background: var(--surface); border-radius: 26px; padding: 22px; display: flex; flex-direction: column; gap: 14px; animation: pop .22s var(--ease) }
+.modal h2 { font-size: 20px }
+.modal .acts { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap }
+@keyframes fade { from { opacity: 0 } }
+@keyframes pop { from { opacity: 0; transform: translateY(8px) } }
+.celebrate { position: fixed; inset: 0; z-index: 40; background: rgba(14,16,40,.93); display: grid; place-items: center; text-align: center; color: #fff; padding: 32px; animation: fade .3s var(--ease); cursor: pointer }
+.celebrate canvas { position: absolute; inset: 0; width: 100%; height: 100% }
+.celebrate .in { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px }
+.celebrate .enso .ring-p { stroke: #fff }
+.celebrate h2 { font-family: var(--display); font-size: 40px; margin-top: 18px; animation: fade .4s 1.2s both }
+.celebrate .hn { color: #F2C46B; font-weight: 700; font-size: 17px; animation: fade .4s 1.3s both }
+.celebrate p { max-width: 30ch; opacity: .85; animation: fade .4s 1.4s both }
+.celebrate small { opacity: .55; margin-top: 18px; animation: fade .4s 1.6s both }
+.sync { font-size: 12px; color: var(--muted); text-align: center; padding-top: 6px }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; transition-duration: .01ms !important }
+  .burst { display: none }
+}
+</style>
+
+<div id="root" class="app"></div>
+<div id="nav"></div>
+<div id="layer"></div>
+
+<script>
+/* ---------------- Habit tree: one drawing function, driven only by progress f (0..1) ----------------
+   Because the picture depends only on f, it runs forward on a check-in and backward on a missed day. */
+const TREE = (() => {
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const easeOut = t => 1 - Math.pow(1 - t, 3);
+  const smooth = t => t * t * (3 - 2 * t);
+  const span = (x, a, b) => clamp((x - a) / (b - a));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const mix = (a, b, t) => {
+    const p = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+    const x = p(a), y = p(b);
+    return "rgb(" + x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",") + ")";
+  };
+
+  // Everything below can be changed.
+  const SHAPES  = { Round: [1, 1], Tall: [.78, 1.2], Wide: [1.28, .86] };            // canopy stretch: across, up
+  const LEAVES  = {                                                                   // back, middle, front
+    Sage:   ["#6E9A68", "#86AE80", "#A6C89E"], Forest: ["#3F7A4C", "#559160", "#78B083"],
+    Teal:   ["#3A8F82", "#56AC9F", "#80C8BD"], Autumn: ["#C9743F", "#DDA04A", "#EDC473"],
+  };
+  const FLOWERS = { Pink: "#F4A9C0", Cream: "#FFF3DC", Yellow: "#F6D86E", Lavender: "#C3ADEB" };
+  const FRUITS  = { Apple: "#D9564C", Orange: "#F09C3C", Mango: "#F2C54D", Plum: "#8052A6" };
+  const STAGES = [   // name, where it starts (share of the journey), where "jump" lands
+    ["Seed", 0, 0], ["Sprout", .0001, .03], ["Sapling", .06, .1], ["Young tree", .2, .3],
+    ["Mature tree", .45, .6], ["In bloom", .7, .82], ["Bearing fruit", .9, .95], ["Full harvest", 1, 1],
+  ];
+  // Canopy: soft round shapes. across, up(-)/down(+), radius (all as a share of canopy size), tone, when it appears.
+  const BLOBS = [
+    [-.56, .14, .50, 0, .24], [.56, .12, .52, 0, .30], [0, -.46, .60, 0, .36],
+    [0, .02, .56, 1, .10], [-.30, -.14, .52, 1, .18], [.32, -.18, .50, 1, .22],
+    [-.42, -.38, .32, 2, .42], [.24, -.54, .30, 2, .48], [.46, .02, .27, 2, .54], [-.12, .04, .28, 2, .46],
+  ];
+  // Where flowers (then fruit) sit, and the order they open in.
+  const SPOTS = [[-.64, .12], [-.36, -.44], [-.04, -.74], [.3, -.56], [.64, -.04], [.38, .24], [-.02, .28], [-.38, .32], [-.2, -.12], [.14, -.24], [.56, -.36], [-.62, -.24]];
+  const ORDER = [8, 2, 5, 0, 9, 4, 11, 6, 3, 7, 10, 1];
+
+  const SKY = { calm: ["#E6F0F3", "#F5F8F1"], calmDark: ["#151A29", "#1D2533"], sunny: ["#8ED0F6", "#EAF7FF"] };
+  const LAND = { calm: ["#DBE8D4", "#C7DCBD"], calmDark: ["#22302A", "#2A3A30"], sunny: ["#C2E6A8", "#9FD587"] };
+
+  function stageOf(f) { let cur = STAGES[0]; for (const st of STAGES) if (f >= st[1]) cur = st; return cur; }
+
+  /** Draws the whole scene into a W x H area. o = {shape, leaf, flower, fruit}. ripple: 0..1 or 0 for none. */
+  function draw(ctx, W, H, f, o, dark, ripple) {
+    f = clamp(f);
+    const u = W / 360, GY = H - 48 * u, BX = W / 2;
+    const s = Math.pow(clamp(f / .7), .65);                       // structure: trunk and canopy
+    const bloom = span(f, .7, .9), fruit = span(f, .9, 1);
+    const sun = smooth(span(f, .985, 1));                          // sunny sky once the goal is reached
+    const g = smooth(s);
+    const [sx, sy] = SHAPES[o.shape] || SHAPES.Round;
+    const tones = LEAVES[o.leaf] || LEAVES.Sage;
+    const circle = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, Math.max(0, r), 0, Math.PI * 2); ctx.fill(); };
+    const oval = (x, y, rx, ry, rot = 0) => { ctx.beginPath(); ctx.ellipse(x, y, Math.max(0, rx), Math.max(0, ry), rot, 0, Math.PI * 2); ctx.fill(); };
+
+    // Sky
+    const sky = dark ? SKY.calmDark : SKY.calm, grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, mix(sky[0], SKY.sunny[0], sun)); grad.addColorStop(1, mix(sky[1], SKY.sunny[1], sun));
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+
+    // Sun and two small clouds
+    if (sun > 0) {
+      const cx = W - 76 * u, cy = (64 + 26 * (1 - sun)) * u;
+      ctx.fillStyle = "#FFE08A";
+      ctx.globalAlpha = .16 * sun; circle(cx, cy, 58 * u);
+      ctx.globalAlpha = .28 * sun; circle(cx, cy, 42 * u);
+      ctx.globalAlpha = sun; ctx.fillStyle = "#FFD257"; circle(cx, cy, 27 * u);
+      ctx.fillStyle = "#FFFFFF"; ctx.globalAlpha = .92 * sun;
+      for (const [x, y, k] of [[66 - 18 * (1 - sun), 62, 1], [214 - 12 * (1 - sun), 34, .7]]) {
+        circle(x * u, y * u, 13 * k * u); circle((x + 15 * k) * u, (y - 7 * k) * u, 16 * k * u); circle((x + 33 * k) * u, y * u, 12 * k * u);
+        ctx.fillRect((x - 1 * k) * u, (y - 1 * k) * u, 35 * k * u, 13 * k * u);
+        circle(x * u, (y + 6 * k) * u, 7 * k * u); circle((x + 33 * k) * u, (y + 6 * k) * u, 7 * k * u);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Camera: close to the ground while the plant is small, easing back as it grows
+    const zoom = 1 + 1.5 * (1 - smooth(span(s, 0, .6)));
+    ctx.save(); ctx.translate(BX, GY); ctx.scale(zoom, zoom); ctx.translate(-BX, -GY);
+
+    // Land
+    const land = dark ? LAND.calmDark : LAND.calm;
+    ctx.fillStyle = mix(land[0], LAND.sunny[0], sun); oval(84 * u, GY + 34 * u, 210 * u, 48 * u);
+    ctx.fillStyle = mix(land[1], LAND.sunny[1], sun); oval(BX + 20 * u, GY + 62 * u, 310 * u, 68 * u);
+    ctx.fillStyle = mix(dark ? "#55463A" : "#B79F82", "#B79F82", sun); oval(BX, GY + 1 * u, (24 + 12 * g) * u, 5 * u);
+
+    // One soft ring at the base on a check-in
+    if (ripple > 0 && ripple < 1) {
+      ctx.strokeStyle = dark ? "#FFFFFF" : "#4E6B4A"; ctx.globalAlpha = .4 * (1 - ripple); ctx.lineWidth = 2 * u;
+      ctx.beginPath(); ctx.ellipse(BX, GY + 1 * u, (26 + 34 * easeOut(ripple)) * u, (5 + 7 * easeOut(ripple)) * u, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // Seed
+    const seedA = 1 - smooth(span(s, .03, .12));
+    if (seedA > 0) { ctx.globalAlpha = seedA; ctx.fillStyle = dark ? "#B08C68" : "#8A6A4C"; oval(BX, GY - 2 * u, 7 * u, 5 * u, -.3); ctx.globalAlpha = 1; }
+
+    // Trunk: one tapered shape
+    const TH = (14 * easeOut(span(s, .01, .1)) + 136 * g) * u;
+    const wb = (2.4 + 15 * g) * u, wt = wb * .5, tx = BX + 5 * g * u, ty = GY - TH;
+    const bark = mix("#7DB56B", dark ? "#A88566" : "#8A6748", smooth(span(s, .08, .3)));
+    if (TH > 0) {
+      ctx.fillStyle = bark; ctx.beginPath();
+      ctx.moveTo(BX - wb * .5 - 3 * g * u, GY + 1 * u);
+      ctx.quadraticCurveTo(BX - wb * .42, GY - TH * .45, tx - wt * .5, ty);
+      ctx.lineTo(tx + wt * .5, ty);
+      ctx.quadraticCurveTo(BX + wb * .42, GY - TH * .45, BX + wb * .5 + 3 * g * u, GY + 1 * u);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // Canopy geometry
+    const R = 84 * (.25 + .75 * g) * u, cx = tx, cy = ty - R * .25;
+    const px = dx => cx + dx * sx * R, py = dy => cy + dy * sy * R;
+
+    // Two branches reaching into the canopy
+    const bk = easeOut(span(s, .25, .55));
+    if (bk > 0) {
+      ctx.strokeStyle = bark; ctx.lineCap = "round"; ctx.lineWidth = (1.5 + 5 * g) * bk * u;
+      for (const [h, dx, dy] of [[.56, -.5, .22], [.7, .48, .16]]) {
+        const x0 = lerp(BX, tx, h), y0 = GY - TH * h, x1 = lerp(x0, px(dx), bk), y1 = lerp(y0, py(dy), bk);
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(lerp(x0, x1, .5), y0 - 2 * u, x1, y1); ctx.stroke();
+      }
+    }
+
+    // The first two leaves of the sprout, which make way for the canopy
+    const sl = easeOut(span(s, .01, .07)) * (1 - smooth(span(s, .12, .26)));
+    if (sl > 0) { ctx.fillStyle = tones[1]; for (const r of [-1, 1]) oval(tx + r * 7 * sl * u, ty - 4 * sl * u, 9 * sl * u, 4.6 * sl * u, r * -.6); }
+
+    // Canopy, back to front
+    for (const [dx, dy, r, tone, birth] of BLOBS) {
+      const k = easeOut(span(s, birth, birth + .3));
+      if (k <= 0) continue;
+      ctx.fillStyle = tones[tone];
+      oval(lerp(cx, px(dx), k), lerp(cy + R * .15, py(dy), k), r * R * k * (.5 + .5 * sx), r * R * k * (.5 + .5 * sy));
+    }
+
+    // Flowers open one by one, then each becomes a fruit
+    const fc = FLOWERS[o.flower] || FLOWERS.Pink, fr = FRUITS[o.fruit] || FRUITS.Apple, n = SPOTS.length;
+    ORDER.forEach((spot, i) => {
+      const order = i / n, x = px(SPOTS[spot][0]), y = py(SPOTS[spot][1]);
+      const open = easeOut(span(bloom, order * .75, order * .75 + .25));
+      const ripe = smooth(span(fruit, order * .6, order * .6 + .4));
+      const fs = open * (1 - ripe) * u;
+      if (fs > .02 * u) {
+        ctx.fillStyle = fc;
+        for (let p = 0; p < 5; p++) { const a = p * Math.PI * 2 / 5 - Math.PI / 2; circle(x + Math.cos(a) * 4.4 * fs, y + Math.sin(a) * 4.4 * fs, 3.8 * fs); }
+        ctx.fillStyle = "#EDBB45"; circle(x, y, 2.4 * fs);
+      }
+      if (ripe > .02) {
+        const rr = 7.5 * ripe * u;
+        ctx.fillStyle = fr; circle(x, y + 2 * ripe * u, rr);
+        ctx.fillStyle = "rgba(255,255,255,.38)"; circle(x - rr * .32, y + 2 * ripe * u - rr * .32, rr * .27);
+      }
+    });
+    ctx.restore();
+  }
+  return { draw, stageOf, SHAPES, LEAVES, FLOWERS, FRUITS, STAGES };
+})();
+
+(() => {
+"use strict";
+
+/* ===================== CONFIG (same as AppConfig.kt) ===================== */
+const CFG = {
+  focusLimit: 3, maxFocus: 10, graduateScore: 80, maxSteps: 8,
+  anchors: ["After I wake up", "After I brush my teeth", "After my morning tea", "After I sit down at my desk", "After lunch", "After I get home", "After dinner", "After I get into bed"],
+  comebackGap: 3,
+  templates: [
+    ["Read", "book", "a reader", "After my morning tea", "read 2 pages", "read for 20 minutes", []],
+    ["Drink water", "water", "someone who stays hydrated", "After I wake up", "drink one glass of water", "drink 8 glasses through the day", []],
+    ["Walk", "walk", "someone who moves every day", "After lunch", "walk for 2 minutes", "walk for 20 minutes", []],
+    ["Exercise", "fitness", "an active person", "After I get home", "do 5 squats", "do a 20-minute workout", []],
+    ["Meditate", "mind", "a calm person", "After I brush my teeth", "take 3 slow breaths", "meditate for 10 minutes", []],
+    ["Journal", "write", "a reflective person", "After I get into bed", "write one line", "write a page", []],
+    ["Sleep on time", "sleep", "a well-rested person", "After dinner", "put my phone on charge outside the bedroom", "be in bed by 10:30 pm", []],
+    ["Save money", "money", "a careful saver", "After I get home", "note what I spent today", "review the week's budget", []],
+    ["Morning routine", "spark", "someone who starts the day well", "After I wake up", "", "", ["Glass of water", "Stretch for 2 minutes", "Plan the day's top 3"]],
+  ],
+  milestones: [1, 7, 21, 30, 66, 100, 200, 365, 500, 1000],
+  colors: ["#4F5FB5", "#2F8F83", "#C9743F", "#B8587A", "#5F8F4E", "#7A62A8", "#3F86B8", "#B08A2E", "#5F6F86", "#C7645A"],
+  accents: [["Indigo", "#3949AB", "#B4BEFF"], ["Teal", "#0F766E", "#7FD6C9"], ["Forest", "#3F7A45", "#A3D6A0"], ["Rose", "#A8476A", "#F2B3C6"], ["Sand", "#8A6410", "#EBC56F"], ["Slate", "#4B5B73", "#B8C4D8"]],
+  icons: [["spark","Spark"],["book","Read"],["fitness","Exercise"],["walk","Walk"],["water","Water"],["mind","Mindful"],["sleep","Sleep"],["write","Write"],["food","Food"],["music","Music"],["leaf","Nature"],["money","Money"],["heart","Health"],["study","Study"],["work","Work"],["art","Art"],["code","Code"],["language","Language"],["bike","Cycle"],["swim","Swim"],["pet","Pet"],["home","Home"],["sun","Morning"],["family","Family"]],
+  ranks: [
+    [0, "Seed", "The first repetitions build the most strength."],
+    [7, "Sprout", "A week of practice. Keep the version tiny."],
+    [30, "Apprentice", "A month in. The cue is starting to pull."],
+    [66, "Forged", "Around the point many habits feel automatic."],
+    [100, "Adept", "A hundred days of keeping your word to yourself."],
+    [365, "Practitioner", "A full year of the Way."],
+    [1000, "Master of forging", "A thousand days to forge. Now the polishing begins."],
+  ],
+  principles: [
+    ["Start tiny", "Two minutes is enough. Ability beats motivation."],
+    ["Anchor it", "Attach the habit to something you already do every day."],
+    ["Never miss twice", "One missed day barely matters. Two in a row starts a new pattern."],
+    ["Same place, same cue", "Stable context is what turns repetition into automaticity."],
+    ["Remove friction", "Make the good habit easy to start; make the bad one awkward."],
+    ["Be patient", "Habits take weeks to months to form. Judge the trend, not the day."],
+    ["Practise daily", "Musashi: a thousand days to forge, ten thousand days to polish."],
+  ],
+};
+const milestoneLine = d => d >= 1000 ? "A thousand days of practice. The forging is done." : d >= 365 ? "A full year. This is who you are now." : d >= 100 ? "One hundred days. Today you beat the self of yesterday." : d >= 66 ? "66 days: the point where many habits become automatic." : d >= 30 ? "A month of showing up." : d >= 21 ? "Three weeks. The early repetitions are paying off." : d >= 7 ? "One week. The first steps build the most strength." : "Day one. The first check-in is the hardest, and it's done.";
+
+/* ===================== Icons ===================== */
+const HICON = {
+  spark: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18.5 16.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
+  book: '<path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15.5H5.5A1.5 1.5 0 0 1 4 18z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15.5h5.5c.8 0 1.5-.7 1.5-1.5z"/>',
+  fitness: '<path d="M6.5 7.5v9M3.5 10v4M17.5 7.5v9M20.5 10v4M6.5 12h11"/>',
+  walk: '<circle cx="13" cy="4.5" r="1.6"/><path d="M10 21l2.2-6.2 2.8 2.7V21M8.5 12.5l2.7-3.8 2.8 1.8 2.5 2.5M11.2 8.7L10.4 15"/>',
+  water: '<path d="M12 3.5s6 6.3 6 10.5a6 6 0 0 1-12 0c0-4.2 6-10.5 6-10.5z"/><path d="M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5"/>',
+  mind: '<circle cx="12" cy="5" r="1.8"/><path d="M5 19c2.3-1.2 4.6-1.5 7-1.5s4.7.3 7 1.5M7.5 14.5L12 10l4.5 4.5M12 10v6"/>',
+  sleep: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  write: '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  food: '<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M9.5 7.5c0-1.6 1-2 1-3.5M13.5 7.5c0-1.6 1-2 1-3.5"/>',
+  music: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+  leaf: '<path d="M5 19C5 10 11 5 20 5c0 9-5 14.5-14 14.5"/><path d="M5 19l7.5-7.5"/>',
+  money: '<circle cx="12" cy="12" r="9"/><path d="M14.6 9.6c-.4-.9-1.4-1.5-2.6-1.5-1.4 0-2.5.8-2.5 1.9s1.1 1.6 2.5 1.9 2.5.9 2.5 2-1.1 2-2.5 2c-1.2 0-2.2-.6-2.6-1.5M12 6.5V8M12 16v1.5"/>',
+  heart: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.2a4.2 4.2 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>',
+  study: '<path d="M3 9l9-4 9 4-9 4z"/><path d="M7 11v4.2c0 1.2 2.2 2.5 5 2.5s5-1.3 5-2.5V11M21 9v5"/>',
+  work: '<rect x="4" y="8" width="16" height="11" rx="2"/><path d="M9 8V6.5A1.5 1.5 0 0 1 10.5 5h3A1.5 1.5 0 0 1 15 6.5V8M4 13h16"/>',
+  art: '<path d="M12 4a8 8 0 1 0 0 16c1.2 0 1.8-.9 1.4-1.9-.5-1.2.3-2.1 1.6-2.1H17a3 3 0 0 0 3-3c0-5-3.6-9-8-9z"/><circle cx="8" cy="11.5" r=".9"/><circle cx="11" cy="8.2" r=".9"/><circle cx="15" cy="9" r=".9"/>',
+  code: '<path d="M9 8l-4 4 4 4M15 8l4 4-4 4"/>',
+  language: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.6 2.6 14.4 0 17M12 3.5c-2.6 2.6-2.6 14.4 0 17"/>',
+  bike: '<circle cx="6.5" cy="16" r="3.5"/><circle cx="17.5" cy="16" r="3.5"/><path d="M6.5 16l4-7h5l2 7M10.5 9l3 7M14 6h2.5"/>',
+  swim: '<path d="M3 17.5c1.5 1 3 1 4.500 0s3-1 4.500 0 3 1 4.500 0 3-1 4.500 0M7 13.500l4-4 3.200 3"/><circle cx="16.500" cy="8" r="1.600"/>',
+  pet: '<circle cx="7" cy="10.500" r="1.500"/><circle cx="10.300" cy="7" r="1.500"/><circle cx="14.300" cy="7.300" r="1.500"/><circle cx="17.300" cy="11" r="1.500"/><path d="M12 12.200c-2.400 0-4.400 2.400-4.400 4.300 0 1.500 1.300 2 2.500 1.600 1.200-.5 2.600-.5 3.800 0 1.200.4 2.500-.1 2.500-1.600 0-1.900-2-4.300-4.400-4.300z"/>',
+  home: '<path d="M4 11l8-7 8 7M6 10v9h12v-9M10 19v-5h4v5"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.600 5.600L7 7M17 17l1.400 1.400M5.600 18.400L7 17M17 7l1.400-1.400"/>',
+  family: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.500" r="2.300"/><path d="M3 19c.8-3.500 3.200-5.500 6-5.500s5.200 2 6 5.500M15.500 14c2.600-.3 4.600 1.700 5.300 5"/>',
+};
+const hicon = (key, size = "") => `<span class="hicon ${size}" aria-hidden="true"><svg viewBox="0 0 24 24">${HICON[key] || HICON.spark}</svg></span>`;
+const I = {
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  tick: '<svg viewBox="0 0 24 24"><path pathLength="1" d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  today: '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4"/></svg>',
+  insights: '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  way: '<svg viewBox="0 0 24 24"><path d="M17.1 5.9A8 8 0 1 0 19.5 14.7"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
+  profile: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+};
+const enso = (size, draw) => `<svg class="enso${draw ? " drawin" : ""}" width="${size}" height="${size}" viewBox="22 22 64 64" aria-hidden="true"><path class="ring-p" pathLength="1" stroke-width="6.5" d="M67.5,37.9 A21,21 0 1,0 73.7,61.2"/><path class="tick-p" pathLength="1" stroke-width="6.5" d="M45,54 L51.5,60.5 L63,47.5"/></svg>`;
+
+/* ===================== Dates & stats (same maths as Stats.kt) ===================== */
+const todayEpoch = () => { const d = new Date(); return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5); };
+const dateOf = day => new Date(day * 864e5);
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const WDAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const fmtShort = day => { const d = dateOf(day); return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`; };
+const wdi = day => (dateOf(day).getUTCDay() + 6) % 7;      // 0 = Monday
+const mondayOf = day => day - wdi(day);
+
+const S = {
+  level: (h, day) => +(h.log[day] || 0),
+  done: (h, day) => S.level(h, day) > 0,
+  // Weekly target (perWeek > 0): any days count; only a finished week that falls short has misses (its last undone days).
+  scheduled: (h, day, t = todayEpoch()) => {
+    if (!(h.perWeek > 0)) return !h.days.length || h.days.includes(wdi(day));
+    if (S.done(h, day)) return true;
+    const m = mondayOf(day), dn = S.weekDone(h, m);
+    if (m + 6 >= t) return day >= t && dn < h.perWeek;
+    const short = h.perWeek - dn; if (short <= 0) return false;
+    const miss = []; for (let d = m + 6; d >= m && miss.length < short; d--) if (d >= h.createdDay && !S.done(h, d)) miss.push(d);
+    return miss.includes(day);
+  },
+  weekDone: (h, m) => { let c = 0; for (let i = 0; i < 7; i++) if (S.done(h, m + i)) c++; return c; },
+  weekMet: (h, t) => h.perWeek > 0 && S.weekDone(h, mondayOf(t)) >= h.perWeek,
+  inLast: (h, n, t) => { let c = 0; for (let i = 0; i < n; i++) if (S.done(h, t - i)) c++; return Math.min(c, S.window(h, n, t)); },
+  window: (h, n, t) => { const span = Math.min(n, t - h.createdDay + 1); let c = 0; for (let i = 0; i < span; i++) if (S.scheduled(h, t - i)) c++; return Math.max(1, c); },
+  total: h => Object.values(h.log).filter(v => v > 0).length,
+  // Tree steps: +1 for a day done, -1 for a planned day missed (never below zero, never above the goal).
+  growth: (h, t, back, goal) => { const ds = Object.keys(h.log).map(Number); const from = Math.min(h.createdDay, ...ds), to = h.graduatedDay != null ? Math.min(t, h.graduatedDay) : t; let g = 0; for (let d = from; d <= to; d++) { if (S.done(h, d)) g = Math.min(goal, g + 1); else if (back && d < t && d >= h.createdDay && S.scheduled(h, d)) g = Math.max(0, g - 1); } return g; },
+  run: (h, t) => { let d = S.done(h, t) ? t : t - 1, n = 0; while (d >= h.createdDay - 400) { if (S.done(h, d)) n++; else if (S.scheduled(h, d) || d < h.createdDay) break; d--; } return n; },
+  best: h => { const ds = Object.keys(h.log).filter(k => h.log[k] > 0).map(Number).sort((a, b) => a - b); let b = 0, r = 0, p = null; for (const d of ds) { let ok = p !== null && d - p <= 7; if (ok) for (let x = p + 1; x < d; x++) if (S.scheduled(h, x)) { ok = false; break; } r = ok ? r + 1 : 1; b = Math.max(b, r); p = d; } return b; },
+  prevScheduled: (h, day) => { for (let i = 1; i <= 7; i++) if (S.scheduled(h, day - i)) return day - i >= h.createdDay ? day - i : null; return null; },
+  missTwice: (h, t) => { if (h.graduatedDay != null || !S.scheduled(h, t) || S.done(h, t)) return false; const p = S.prevScheduled(h, t); return p != null && !S.done(h, p); },
+  missedRow: (h, t) => { let n = 0; for (let d = t - 1; d >= h.createdDay && n < 60; d--) { if (S.done(h, d)) break; if (S.scheduled(h, d)) n++; } return n; },
+  daysLabel: h => h.perWeek > 0 ? (h.perWeek === 1 ? "Once a week, any day" : `${h.perWeek} times a week, any days`) : !h.days.length ? "Every day" : h.days.join() === "0,1,2,3,4" ? "Weekdays" : h.days.join() === "5,6" ? "Weekends" : h.days.map(i => WDAYS[i].slice(0, 3)).join(" · "),
+  rank: n => CFG.ranks.filter(r => n >= r[0]).pop(),
+  next: n => CFG.ranks.find(r => r[0] > n),
+  rankProg: n => { const c = S.rank(n), x = S.next(n); return x ? (n - c[0]) / (x[0] - c[0]) : 1; },
+  recipe: h => { const steps = h.subtasks.filter(s => s.title.trim()).length; return `${h.anchor || "After …"}, I will ${h.tinyVersion || (steps ? `do my ${steps} steps` : "…")}${h.place ? " " + h.place : ""}.`; },
+  latestStrength: h => h.strength.slice().sort((a, b) => b.day - a.day)[0],
+  strengthDue: (h, t) => h.graduatedDay == null && t - h.createdDay >= 6 && (!S.latestStrength(h) || t - S.latestStrength(h).day >= 7),
+  ready: h => { const l = h.strength.slice().sort((a, b) => a.day - b.day).slice(-3); return l.length === 3 && l.every(e => e.score >= CFG.graduateScore); },
+  reviewDue: (d, t) => d.habits.some(h => h.graduatedDay == null && t - h.createdDay >= 6) && (d.settings.lastReviewDay == null || t - d.settings.lastReviewDay >= 7),
+  strengthScore: a => Math.max(0, Math.min(100, Math.floor((a.reduce((x, y) => x + y, 0) - a.length) / (a.length * 4) * 100))),
+  // sub-tasks
+  stepsDone: (h, day) => !h.subtasks.length ? 0 : S.done(h, day) ? h.subtasks.length : h.subtasks.filter(s => (h.subLog[day] || []).includes(s.id)).length,
+  stepOn: (h, day, id) => S.done(h, day) || (h.subLog[day] || []).includes(id),
+  // insights
+  activeOn: (h, day) => day >= h.createdDay && (h.graduatedDay == null || day < h.graduatedDay) && S.scheduled(h, day),
+  dayRate: (hs, day) => { const r = hs.filter(h => S.activeOn(h, day)); return r.length ? r.filter(h => S.done(h, day)).length / r.length : null; },
+  weekly: (hs, weeks, t) => { const m = mondayOf(t), out = []; for (let w = weeks - 1; w >= 0; w--) { const s = m - 7 * w; let dn = 0, p = 0; for (let d = s; d <= Math.min(s + 6, t); d++) for (const h of hs) if (S.activeOn(h, d)) { p++; if (S.done(h, d)) dn++; } out.push(p ? dn / p : null); } return out; },
+  byWeekday: (hs, weeks, t) => { const dn = Array(7).fill(0), p = Array(7).fill(0); for (let d = t - 7 * weeks + 1; d <= t; d++) { const i = wdi(d); for (const h of hs) if (S.activeOn(h, d)) { p[i]++; if (S.done(h, d)) dn[i]++; } } return p.map((x, i) => x ? dn[i] / x : null); },
+  checkIns: hs => hs.reduce((a, h) => a + S.total(h), 0),
+};
+
+/* ===================== Data ===================== */
+/* ---------- Daily planning (same rules as the Android app's logic/Plan.kt) ---------- */
+const PCFG = { maxTasks: 3, eveningFrom: 17, minTimed: 3, estimates: [15, 30, 45, 60, 90, 120], focus: [25, 50, 90], breaks: [5, 10] };
+const P = {
+  tasksFor: (d, day) => d.tasks.filter(x => x.day === day && !x.letGo).sort((a, b) => (a.time < 0) - (b.time < 0) || a.time - b.time),
+  leftovers: (d, t) => d.tasks.filter(x => x.day < t && !x.done && !x.letGo).sort((a, b) => a.day - b.day),
+  timed: (d, t) => d.tasks.filter(x => x.estimate > 0 && x.actual > 0 && x.done && x.day > t - 28),
+  ratio: (d, t) => { const a = P.timed(d, t); if (a.length < PCFG.minTimed) return null; return a.reduce((s, x) => s + x.actual, 0) / a.reduce((s, x) => s + x.estimate, 0); },
+  realistic: (m, r) => r == null || m <= 0 ? m : Math.max(1, Math.round(m * r / 5)) * 5,
+  mins: m => m < 60 ? `${m} min` : m % 60 === 0 ? `${m / 60} h` : `${Math.floor(m / 60)} h ${m % 60} min`,
+  ratioLabel: r => r.toFixed(1) + "×",
+  time: m => { const h = Math.floor(m / 60), mm = m % 60; return `${h % 12 || 12}:${String(mm).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`; },
+  sentence: x => `${x.time >= 0 ? "At " + P.time(x.time) : "Today"}${x.place.trim() ? " " + x.place.trim() : ""}, I will ${(x.title.trim().charAt(0).toLowerCase() + x.title.trim().slice(1)) || "…"}.`,
+  meta: x => [x.time >= 0 ? P.time(x.time) : null, x.place || null, x.estimate > 0 ? P.mins(x.estimate) : null, x.actual > 0 ? P.mins(x.actual) + " focused" : null].filter(Boolean).join(" · ") || "Any time",
+  eveningDue: (d, t) => new Date().getHours() >= PCFG.eveningFrom && d.settings.closedDay !== t,
+  wins: (d, from, to) => d.wins.filter(w => w.day >= from && w.day <= to).sort((a, b) => b.day - a.day),
+  dayName: (day, t) => day === t ? "Today" : day === t + 1 ? "Tomorrow" : day === t - 1 ? "Yesterday" : `${WDAYS[wdi(day)].slice(0, 3)} ${dateOf(day).getUTCDate()} ${MONTHS[dateOf(day).getUTCMonth()]}`,
+};
+const blankTask = day => ({ id: uid(), title: "", day, time: -1, place: "", estimate: 0, actual: 0, done: false, letGo: false, reminder: true });
+
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
+const blankHabit = (i = 0) => ({ id: uid(), name: "", identity: "", anchor: "", tinyVersion: "", fullVersion: "", place: "", obstacle: "", backup: "", colorIndex: i % CFG.colors.length, reminderOn: false, reminderHour: 8, reminderMinute: 0, createdDay: todayEpoch(), log: {}, strength: [], graduatedDay: null, icon: "spark", subtasks: [], subLog: {}, days: [], perWeek: 0 });
+const defaultSettings = () => ({ userName: "", focusLimit: CFG.focusLimit, celebration: 1, haptics: true, taperReminders: true, dynamicColor: false, themeMode: 0, accent: 0, treeGoal: 1000, treeShape: "Round", treeLeaf: "Sage", treeFlower: "Pink", treeFruit: "Apple", treeBack: true, planReminderOn: false, planHour: 20, planMinute: 30, focusMinutes: 25, breakMinutes: 5, closedDay: null, lastReviewDay: null, onboarded: true });
+
+function sampleData() {
+  const t = todayEpoch();
+  const mk = (o, age, pattern) => { const h = Object.assign(blankHabit(), o, { createdDay: t - age, sample: true }); for (let i = 1; i <= age; i++) { const v = pattern(i); if (v) h.log[t - i] = v; } return h; };
+  const read = mk({ name: "Read", icon: "book", identity: "a reader", anchor: "After my morning tea", tinyVersion: "read 2 pages", fullVersion: "read for 20 minutes", place: "in the living room chair", obstacle: "I'm too tired", backup: "read one paragraph", colorIndex: 0, reminderOn: true, reminderHour: 7, reminderMinute: 15 }, 75, i => (i % 9 === 4 || i % 23 === 0 ? 0 : i % 3 === 0 ? 2 : 1));
+  read.strength = [{ day: t - 61, score: 18 }, { day: t - 47, score: 37 }, { day: t - 33, score: 52 }, { day: t - 19, score: 66 }, { day: t - 12, score: 72 }, { day: t - 5, score: 78 }];
+  const ids = [uid(), uid(), uid()];
+  const morning = mk({ name: "Morning routine", icon: "mind", identity: "someone who starts the day calm", anchor: "After I wake up", subtasks: [{ id: ids[0], title: "Glass of water" }, { id: ids[1], title: "Stretch for 5 minutes" }, { id: ids[2], title: "Plan the day's top 3" }], colorIndex: 1 }, 34, i => (i % 7 === 6 || i % 5 === 0 ? 0 : 1));
+  for (let i = 1; i <= 34; i++) if (!morning.log[t - i] && i % 5 === 0) morning.subLog[t - i] = [ids[0]];
+  morning.subLog[t] = [ids[0]];
+  morning.strength = [{ day: t - 26, score: 25 }, { day: t - 19, score: 34 }, { day: t - 12, score: 47 }, { day: t - 5, score: 53 }];
+  const walk = mk({ name: "Walk", icon: "walk", identity: "someone who moves every day", anchor: "After lunch", tinyVersion: "walk to the end of the road", fullVersion: "walk for 15 minutes", colorIndex: 2, days: [0, 1, 2, 3, 4] }, 16, i => (wdi(t - i) > 4 || i === 1 || i % 6 === 0 ? 0 : 1));
+  const tk = (title, day, o) => Object.assign(blankTask(day), { title, sample: true }, o);
+  const tasks = [
+    tk("Draft the project summary", t, { time: 9 * 60, place: "at my desk", estimate: 60, actual: 25 }),
+    tk("Call the supplier about the quote", t, { time: 11 * 60 + 30, estimate: 15, done: true }),
+    tk("Review two calibration reports", t, { estimate: 45 }),
+    tk("Book the meeting room", t - 1, { estimate: 15 }),
+    tk("Write the lab update", t - 2, { estimate: 30, actual: 40, done: true }),
+    tk("Prepare slides", t - 3, { estimate: 60, actual: 85, done: true }),
+    tk("Answer emails", t - 4, { estimate: 30, actual: 35, done: true }),
+  ];
+  const wins = [{ day: t - 1, text: "Finished the first draft of the report", sample: true }, { day: t - 2, text: "Walked after lunch every day this week", sample: true }];
+  return { habits: [read, morning, walk], settings: defaultSettings(), reviews: [], tasks, wins, focus: null };
+}
+
+function normalize(o) {
+  const st = Object.assign(defaultSettings(), o && o.settings || {});
+  if (![66, 100, 365, 1000].includes(+st.treeGoal)) st.treeGoal = 1000; else st.treeGoal = +st.treeGoal;
+  for (const [k, table] of [["treeShape", TREE.SHAPES], ["treeLeaf", TREE.LEAVES], ["treeFlower", TREE.FLOWERS], ["treeFruit", TREE.FRUITS]]) if (!table[st[k]]) st[k] = Object.keys(table)[0];
+  st.treeBack = st.treeBack !== false;
+  const habits = (o && Array.isArray(o.habits) ? o.habits : []).map(h => {
+    const b = Object.assign(blankHabit(), h);
+    b.log = {}; for (const k in (h.log || {})) { const v = +h.log[k]; if (v > 0) b.log[+k] = v; }
+    b.strength = Array.isArray(h.strength) ? h.strength.map(e => ({ day: +e.day, score: +e.score })) : [];
+    b.graduatedDay = h.graduatedDay == null ? null : +h.graduatedDay;
+    b.icon = HICON[h.icon] ? h.icon : "spark";
+    b.subtasks = Array.isArray(h.subtasks) ? h.subtasks.map(s => ({ id: String(s.id || uid()), title: String(s.title || "") })) : [];
+    const ds = Array.isArray(h.days) ? [...new Set(h.days.map(Number).filter(x => x >= 0 && x <= 6))].sort() : [];
+    b.days = ds.length === 7 ? [] : ds;
+    b.subLog = {}; for (const k in (h.subLog || {})) if (Array.isArray(h.subLog[k])) b.subLog[+k] = h.subLog[k].map(String);
+    return b;
+  });
+  for (const h of habits) h.perWeek = Math.max(0, Math.min(6, +h.perWeek || 0));
+  const num = (v, d, lo, hi) => { v = +v; return isFinite(v) ? Math.max(lo, Math.min(hi, Math.round(v))) : d; };
+  const tasks = (o && Array.isArray(o.tasks) ? o.tasks : []).filter(x => x && x.title).map(x => ({
+    id: String(x.id || uid()), title: String(x.title), day: num(x.day, todayEpoch(), 0, 1e6), time: num(x.time, -1, -1, 1439), place: String(x.place || ""),
+    estimate: num(x.estimate, 0, 0, 1440), actual: num(x.actual, 0, 0, 1440), done: !!x.done, letGo: !!x.letGo, reminder: x.reminder !== false, sample: !!x.sample }));
+  const wins = (o && Array.isArray(o.wins) ? o.wins : []).filter(w => w && w.text).map(w => ({ day: +w.day, text: String(w.text), sample: !!w.sample }));
+  const f = o && o.focus, focus = f && f.taskId ? { taskId: String(f.taskId), startMillis: +f.startMillis || 0, minutes: num(f.minutes, 25, 1, 180) } : null;
+  return { habits, settings: st, reviews: Array.isArray(o && o.reviews) ? o.reviews : [], tasks, wins, focus };
+}
+function toExport(d) {
+  const clean = x => { const c = Object.assign({}, x); delete c.sample; return c; };
+  return { format: "enso-habits", version: 1, settings: d.settings, reviews: d.reviews,
+    tasks: d.tasks.map(clean), wins: d.wins.map(clean), focus: d.focus || undefined,
+    habits: d.habits.map(h => { const c = Object.assign({}, h); delete c.sample; if (c.graduatedDay == null) delete c.graduatedDay; return c; }) };
+}
+
+/* ===================== Storage: private per-viewer db doc, browser fallback ===================== */
+const LOCAL_KEY = "enso-habits-web";
+const store = { mode: "local", ref: null, writing: false, again: false, timer: null, status: "" };
+const me = { name: "", signedIn: false };
+let data = null;
+
+function readLocal() { try { const t = localStorage.getItem(LOCAL_KEY); return t ? JSON.parse(t) : null; } catch { return null; } }
+function writeLocal() { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(toExport(data))); } catch {} }
+function setStatus(s) { store.status = s; const el = document.getElementById("sync"); if (el) el.textContent = s; }
+
+async function flush() {
+  if (!store.ref) return;
+  if (store.writing) { store.again = true; return; }
+  store.writing = true;
+  try { await store.ref.set({ json: JSON.stringify(toExport(data)), savedAt: Date.now() }); setStatus("Saved to your account"); }
+  catch (e) { setStatus(e && e.code === "quota_exceeded" ? "Your data is too large to save. Export a backup and remove old habits." : "Couldn't save just now. Changes are kept in this browser."); }
+  store.writing = false;
+  if (store.again) { store.again = false; flush(); }
+}
+function save() { writeLocal(); clearTimeout(store.timer); store.timer = setTimeout(flush, 700); }
+
+async function connect() {
+  if (!window.claude || !window.claude.use) return;
+  const timeout = new Promise(r => setTimeout(() => r(null), 10000));
+  try {
+    const [db, user] = await Promise.all([Promise.race([claude.use("db"), timeout]), Promise.race([claude.use("user"), timeout])]);
+    if (user) { try { const v = await user.me(); if (v && v.name) { me.name = v.name; } } catch {} }
+    if (!db || !user) { render(); return; }
+    const id = await user.id();
+    if (!id) { render(); return; }
+    me.signedIn = true;
+    const ref = db.doc("data/users/" + id + "/state");
+    const snap = await Promise.race([ref.get(), timeout]);
+    if (!snap) { setStatus("Your account can't be reached yet. Changes are kept in this browser."); render(); return; }
+    store.ref = ref; store.mode = "db";
+    if (snap.exists) { try { data = normalize(JSON.parse(snap.data().json)); applyTheme(); tick(); } catch {} }
+    else if (readLocal()) flush();
+    store.status = "Saved to your account";
+    render();
+  } catch { render(); }
+}
+
+/* ===================== UI state ===================== */
+const TABS = [["today", "Today", I.today], ["insights", "Insights", I.insights], ["way", "The Way", I.way], ["profile", "Profile", I.profile]];
+let ui = { tab: "today", stack: [], step: 0, draft: null, isNew: false, err: "", justDone: null, modal: null, toast: null, celebrate: null, importText: "", open: {}, day: null };
+const route = () => ui.stack.length ? ui.stack[ui.stack.length - 1] : { r: ui.tab };
+let toastTimer = null;
+const hostTheme = document.documentElement.getAttribute("data-theme");
+function applyTheme() {
+  const m = data.settings.themeMode, r = document.documentElement;
+  if (m === 1) r.setAttribute("data-theme", "light"); else if (m === 2) r.setAttribute("data-theme", "dark");
+  else if (hostTheme) r.setAttribute("data-theme", hostTheme); else r.removeAttribute("data-theme");
+  r.setAttribute("data-accent", String((+data.settings.accent || 0) % CFG.accents.length));
+}
+function push(r) { ui.stack.push(r); ui.err = ""; render(); window.scrollTo(0, 0); }
+function pop() { ui.stack.pop(); ui.err = ""; render(); window.scrollTo(0, 0); }
+function goTab(t) { const a = TABS.findIndex(x => x[0] === ui.tab), b = TABS.findIndex(x => x[0] === t); ui.slide = b > a ? "right" : b < a ? "left" : null; ui.tab = t; ui.stack = []; render(); window.scrollTo(0, 0); }
+// Swipe left or right anywhere on a main screen to move between the four sections.
+let swipe = null;
+document.addEventListener("touchstart", e => { const t = e.touches[0]; swipe = e.touches.length === 1 && !ui.stack.length && !ui.modal && !ui.celebrate && !e.target.closest("input, textarea, .heat, .scroll-x") ? { x: t.clientX, y: t.clientY } : null; }, { passive: true });
+document.addEventListener("touchend", e => {
+  if (!swipe) return; const t = e.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y; swipe = null;
+  if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+  const i = TABS.findIndex(x => x[0] === ui.tab) + (dx < 0 ? 1 : -1);
+  if (i >= 0 && i < TABS.length) goTab(TABS[i][0]);
+}, { passive: true });
+let toastUndo = null;
+function toast(msg, undo) { ui.toast = msg; toastUndo = undo || null; render(); clearTimeout(toastTimer); toastTimer = setTimeout(() => { ui.toast = null; toastUndo = null; render(); }, undo ? 4500 : 3200); }
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const habit = id => data.habits.find(h => h.id === id);
+const color = i => CFG.colors[((i % CFG.colors.length) + CFG.colors.length) % CFG.colors.length];
+const motionOK = () => !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function buzz() { try { if (data.settings.haptics && navigator.vibrate) navigator.vibrate(12); } catch {} }
+const displayName = () => data.settings.userName || me.name || "";
+const initials = () => { const n = displayName(); return n ? n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") : "E"; };
+const bar = (title, right) => `<header class="topbar"><button class="icon-btn" data-act="back" aria-label="Back">${I.back}</button><div class="t"><h1>${title}</h1></div>${right || ""}</header>`;
+const pageHead = (title, sub) => `<div class="page-h">${sub ? `<div class="eyebrow">${sub}</div>` : ""}<h1>${title}</h1></div>`;
+
+/* ===================== Charts ===================== */
+function ringSvg(cls, frac, r, sw, size) {
+  const C = 2 * Math.PI * r;
+  return `<svg viewBox="0 0 ${size} ${size}"><circle class="tr" cx="${size / 2}" cy="${size / 2}" r="${r}" stroke-width="${sw}"/>${frac > 0 ? `<circle class="br ${cls}" cx="${size / 2}" cy="${size / 2}" r="${r}" stroke-width="${sw}" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.min(1, frac))}"/>` : ""}</svg>`;
+}
+/** GitHub-style heatmap, Monday on top, `weeks` columns ending with this week. */
+function heatmap(weeks, end, val, col) {
+  const cell = 15, gap = 3, L = 18, T = 16, W = L + weeks * (cell + gap) - gap, H = T + 7 * (cell + gap) - gap;
+  const start = mondayOf(end) - 7 * (weeks - 1);
+  let out = "", lastM = -1;
+  [[0, "M"], [2, "W"], [4, "F"]].forEach(([r, l]) => { out += `<text x="0" y="${T + r * (cell + gap) + 11}">${l}</text>`; });
+  for (let w = 0; w < weeks; w++) {
+    const mon = start + 7 * w, m = dateOf(mon).getUTCMonth(), x = L + w * (cell + gap);
+    if (m !== lastM) { if (w > 0 || weeks <= 8) out += `<text x="${x}" y="10">${MONTHS[m]}</text>`; lastM = m; }
+    for (let d = 0; d < 7; d++) {
+      const day = mon + d, y = T + d * (cell + gap), v = day > end ? null : val(day);
+      const fill = v == null ? "var(--surface-2)" : v <= 0 ? "var(--surface-3)" : `color-mix(in oklab, ${col} ${Math.round(30 + 70 * Math.min(1, v))}%, var(--surface))`;
+      out += `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="3.5" fill="${fill}"${day === end ? ' stroke="var(--ink)" stroke-width="1.6"' : ""}><title>${fmtShort(day)}${v == null ? "" : `: ${Math.round(v * 100)}%`}</title></rect>`;
+    }
+  }
+  return `<svg class="hm" viewBox="0 0 ${W} ${H}" role="img" aria-label="Heatmap of the last ${weeks} weeks">${out}</svg>
+    <div class="legend" style="justify-content:flex-end;margin-top:8px">Less <i style="background:var(--surface-3)"></i><i style="background:color-mix(in oklab, ${col} 40%, var(--surface))"></i><i style="background:color-mix(in oklab, ${col} 70%, var(--surface))"></i><i style="background:${col}"></i> More</div>`;
+}
+/** Vertical bars of 0..1 rates with a label under each; `hi` gets full colour and its value printed. */
+function rateBars(vals, labels, col, hi) {
+  const W = 320, H = 150, L = 30, T = 16, B = 20, n = vals.length, slot = (W - L) / n, bw = slot * .56, h = H - T - B;
+  let out = [0, .5, 1].map(f => `<line class="grid" x1="${L}" x2="${W}" y1="${T + h * (1 - f)}" y2="${T + h * (1 - f)}"/><text x="${L - 6}" y="${T + h * (1 - f) + 3.5}" text-anchor="end">${f * 100}%</text>`).join("");
+  vals.forEach((v, i) => {
+    const x = L + slot * i + (slot - bw) / 2;
+    if (v != null && v > 0) out += `<rect class="bar" style="animation-delay:${i * 40}ms" x="${x.toFixed(1)}" y="${(T + h * (1 - v)).toFixed(1)}" width="${bw.toFixed(1)}" height="${(h * v).toFixed(1)}" rx="${(bw * .25).toFixed(1)}" fill="${col}" fill-opacity="${hi < 0 || i === hi ? 1 : .42}"><title>${labels[i]}: ${Math.round(v * 100)}%</title></rect>`;
+    if (i === hi && v != null) out += `<text class="strong" x="${(x + bw / 2).toFixed(1)}" y="${(T + h * (1 - v) - 5).toFixed(1)}" text-anchor="middle">${Math.round(v * 100)}%</text>`;
+    out += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 4}" text-anchor="middle">${labels[i]}</text>`;
+  });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">${out}</svg>`;
+}
+
+/* ===================== Screens ===================== */
+function greeting() { const h = new Date().getHours(); const p = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"; const n = displayName().split(" ")[0]; return n ? `${p}, ${esc(n)}` : p; }
+
+function viewToday() {
+  const t = todayEpoch(), d = new Date();
+  const mon = mondayOf(t);
+  const day = ui.day != null && ui.day <= t && ui.day >= mon ? ui.day : t, isToday = day === t;
+  const active = data.habits.filter(h => h.graduatedDay == null);
+  const planned = active.filter(h => S.scheduled(h, day));
+  const done = planned.filter(h => S.done(h, day)).length;
+  const frac = planned.length ? done / planned.length : 0;
+  let html = `<div class="hello"><div class="grow"><div class="eyebrow">${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}</div><h1>${greeting()}</h1></div><button class="avatar" data-act="tab" data-to="profile" aria-label="Profile">${esc(initials())}</button></div><main class="stack">`;
+  html += `<div class="card weekcard"><div class="week" aria-label="This week. Tap a day to check in for it.">`;
+  for (let i = 0; i < 7; i++) {
+    const wd = mon + i, rate = wd > t ? null : S.dayRate(active, wd);
+    html += `<button class="wd${wd === day ? " today" : ""}${wd > t ? " fut" : ""}" ${wd > t ? "disabled" : `data-act="pickday" data-d="${wd}"`} aria-pressed="${wd === day}" aria-label="${WDAYS[i]}${rate == null ? "" : `, ${Math.round(rate * 100)}% done`}"><span class="l">${WDAYS[i][0]}</span><span class="r">${ringSvg(rate >= 1 ? "full" : "", rate || 0, 15, 3.5, 34)}<b>${dateOf(wd).getUTCDate()}</b></span></button>`;
+  }
+  html += `</div>`;
+  if (active.length) {
+    const all = planned.length && done === planned.length;
+    html += `<div class="prog"><div class="row" style="gap:8px"><b class="grow">${!planned.length ? "Rest day" : all ? (isToday ? "All done today" : "All done") : `${done} of ${planned.length} done${isToday ? " today" : ""}`}</b><span class="small muted">${!planned.length ? "Nothing planned" : all ? "Rest well" : "The tiny version counts"}</span></div><div class="bar-track"><div class="bar-fill${all ? " full" : ""}" style="width:${(frac * 100).toFixed(1)}%"></div></div></div>`;
+  }
+  html += `</div>`;
+  if (!isToday) html += `<div class="row" style="padding:0 4px"><b class="grow">Checking in for ${day === t - 1 ? "yesterday" : `${WDAYS[wdi(day)]} ${dateOf(day).getUTCDate()} ${MONTHS[dateOf(day).getUTCMonth()]}`}</b><button class="btn text" data-act="pickday" data-d="${t}">Back to today</button></div>`;
+  if (isToday) html += planCards(t);
+  if (active.length) {
+    if (active.every(h => S.total(h) === 0)) html += `<div class="card inset small muted">Tap the circle to check in. Tap a card to see its history and edit it.</div>`;
+  }
+  if (data.habits.some(h => h.sample)) html += `<div class="row small muted" style="padding:0 6px"><span class="grow">Sample habits, so you can look around.</span><button class="btn text" data-act="clear-samples">Start fresh</button></div>`;
+  if (S.reviewDue(data, t)) html += `<button class="card soft" data-act="push" data-r="review"><b>Weekly review is ready</b><div class="muted small">Two minutes to see what worked and adjust a cue or size.</div></button>`;
+  if (!active.length) html += `<div class="empty">${enso(124, true)}<h2>Start with one tiny habit</h2><p class="muted" style="max-width:32ch">Pick something you already do every day, then attach a two-minute action to it. Add steps if it's a routine.</p><button class="btn" data-act="new" style="margin-top:8px">Create my first habit</button></div>`;
+  for (const h of active) html += habitCard(h, day, isToday);
+  html += `<div class="sync" id="sync">${esc(store.status || (store.mode === "local" ? "Saved in this browser" : ""))}</div></main>`;
+  if (active.length) html += `<button class="fab" data-act="new">${I.plus}New habit</button>`;
+  return html;
+}
+
+/* ---------- Daily planning views ---------- */
+const playIco = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z"/></svg>`;
+const timerIco = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>`;
+const taskRow = (x, focusable = true) => `<div class="task${x.done ? " done" : ""}"><button class="tbox${x.done ? " on" : ""}" data-act="task-toggle" data-t="${x.id}" role="checkbox" aria-checked="${x.done}" aria-label="${x.done ? "Undo" : "Done"}: ${esc(x.title)}">${I.tick}</button>
+  <button class="grow" style="background:none;border:0;text-align:left;color:inherit;font:inherit;padding:0" data-act="task-open" data-t="${x.id}"><div class="tt">${esc(x.title)}</div><div class="small muted">${esc(P.meta(x))}</div></button>
+  ${focusable && !x.done ? `<button class="play" data-act="task-focus" data-t="${x.id}" aria-label="${data.focus && data.focus.taskId === x.id ? "Focus session running" : "Start a focus session"}">${data.focus && data.focus.taskId === x.id ? timerIco : playIco}</button>` : ""}</div>`;
+const moveRow = (x, t, target, label) => `<div class="mv"><div class="grow"><div style="font-weight:650">${esc(x.title)}</div><div class="small muted">${P.dayName(x.day, t)}</div></div><button class="btn text" data-act="task-move" data-t="${x.id}" data-d="${target}">${label}</button><button class="btn text" data-act="task-letgo" data-t="${x.id}">Let go</button></div>`;
+
+function planCards(t) {
+  let html = "";
+  const left = P.leftovers(data, t);
+  if (left.length) html += `<div class="card inset"><b>From earlier days</b><div class="small muted">Not finished, and that's fine. Move each to today, or let it go.</div>${left.map(x => moveRow(x, t, t, "Today")).join("")}</div>`;
+  const tasks = P.tasksFor(data, t), dn = tasks.filter(x => x.done).length;
+  html += `<div class="card"><div class="row"><b class="grow" style="color:var(--primary)">Today's top 3</b>${tasks.length ? `<span class="small muted">${dn} of ${tasks.length} done</span>` : ""}</div>`;
+  if (!tasks.length) html += `<p class="small muted" style="margin:6px 0 10px">Pick up to three things that would make today a good day, each with a time and place.</p><button class="btn tonal" data-act="task-add" data-d="${t}">${I.plus}Add a task</button>`;
+  else html += tasks.map(x => taskRow(x)).join("") + (tasks.length < PCFG.maxTasks ? `<button class="btn text" data-act="task-add" data-d="${t}" style="margin-top:4px">Add a task</button>` : `<div class="small muted" style="margin-top:6px">Three is enough. The rest of the day is room for surprises.</div>`);
+  html += `</div>`;
+  if (data.settings.closedDay === t) html += `<div class="card inset row"><div class="grow"><b>Workday closed</b><div class="small muted">Tomorrow is planned. You can switch off.</div></div><button class="btn text" data-act="push" data-r="plan">Open plan</button></div>`;
+  else if (P.eveningDue(data, t)) html += `<button class="card soft" data-act="push" data-r="plan"><b>Plan tomorrow · 2 minutes</b><div class="muted small">Note today's win, sort what's unfinished and pick tomorrow's top 3. Once it's written down, your mind can rest.</div></button>`;
+  return html;
+}
+
+function viewTask(rt) {
+  const t = todayEpoch(), x = ui.tdraft, r = P.ratio(data, t), isNew = !data.tasks.some(y => y.id === x.id);
+  const hh = x.time >= 0 ? String(Math.floor(x.time / 60)).padStart(2, "0") + ":" + String(x.time % 60).padStart(2, "0") : "";
+  let html = bar(isNew ? "New task" : "Edit task", isNew ? "" : `<button class="icon-btn" data-act="task-del" aria-label="Delete task">${I.close}</button>`) + `<main class="stack">`;
+  if (x.day >= t) html += `<div class="chips">${[t, t + 1].map(d => `<button class="pick${x.day === d ? " on" : ""}" data-act="tday" data-d="${d}">${P.dayName(d, t)}</button>`).join("")}</div>`;
+  html += `<label class="field"><span>What will you do?</span><input class="input" id="tk-title" data-tfield="title" maxlength="120" value="${esc(x.title)}" placeholder="Write the report introduction" autocomplete="off"></label>
+    <div class="field"><span>When?</span><div class="chips"><button class="pick${x.time < 0 ? " on" : ""}" data-act="ttime-any">Any time</button><input class="input" type="time" id="tk-time" data-tfield="time" value="${hh}" style="width:auto;flex:none" aria-label="Pick a time"></div></div>
+    <label class="field"><span>Where? (optional)</span><input class="input" id="tk-place" data-tfield="place" maxlength="60" value="${esc(x.place)}" placeholder="at my desk" autocomplete="off"></label>
+    <div class="field"><span>How long do you think it will take?</span><div class="chips"><button class="pick${!x.estimate ? " on" : ""}" data-act="test" data-v="0">Not sure</button>${PCFG.estimates.map(m => `<button class="pick${x.estimate === m ? " on" : ""}" data-act="test" data-v="${m}">${P.mins(m)}</button>`).join("")}</div>
+      <p class="small muted">${r != null && x.estimate ? `Your timed tasks have taken ${P.ratioLabel(r)} your estimates, so allow about ${P.mins(P.realistic(x.estimate, r))}.` : r != null ? `Your timed tasks have taken ${P.ratioLabel(r)} your estimates.` : "Most people underestimate. Time a few tasks with Focus and the app will learn your own pace."}</p></div>
+    <div class="card soft"><div class="small" style="font-weight:700">Your plan</div><div id="tk-pv" style="font-size:17px;font-weight:700;margin:2px 0 4px">${esc(P.sentence(x))}</div><div class="small muted">Plans that name a time and place are much more likely to happen.</div></div>
+    <button class="btn block" data-act="task-save" id="tk-save" ${x.title.trim() ? "" : "disabled"}>Save</button></main>`;
+  return html;
+}
+
+function viewFocus(rt) {
+  const x = data.tasks.find(y => y.id === rt.id); if (!x) { setTimeout(pop); return ""; }
+  const s = data.focus, running = s && s.taskId === x.id, now = Date.now(), onBreak = !running && ui.breakEnd > now;
+  const C = 2 * Math.PI * 113;
+  const ring = (frac, label, sub, brk) => `<div class="ring-big${brk ? " brk" : ""}"><svg viewBox="0 0 240 240"><circle class="tr" cx="120" cy="120" r="113"/><circle class="fg" cx="120" cy="120" r="113" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - Math.max(0, Math.min(1, frac)))).toFixed(1)}"/></svg><div class="lbl"><b id="fc-l">${label}</b><span class="small muted">${sub}</span></div></div>`;
+  const clock = ms => { const q = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(q / 60)}:${String(q % 60).padStart(2, "0")}`; };
+  let html = bar("Focus") + `<main class="stack" style="text-align:center"><h2 style="margin:0">${esc(x.title)}</h2><div class="small muted">${esc(P.meta(x))}</div>`;
+  if (running) {
+    const left = s.startMillis + s.minutes * 6e4 - now;
+    html += ring(1 - left / (s.minutes * 6e4), clock(left), `of ${s.minutes} min`) + `<p class="muted small">One thing at a time. Each switch away costs time to get back into it. Silence notifications if you can.</p><button class="btn block" data-act="focus-stop">Stop and save the time</button>`;
+  } else if (onBreak) {
+    const left = ui.breakEnd - now;
+    html += ring(1 - left / (data.settings.breakMinutes * 6e4), clock(left), "break", true) + `<p>Session saved. Stand up, look out of a window, have some water.</p><div class="row" style="justify-content:center;gap:10px"><button class="btn outline" data-act="break-skip">Skip break</button><button class="btn" data-act="focus-done">Task done</button></div>`;
+  } else {
+    const m = ui.focusLen || data.settings.focusMinutes, other = s && data.tasks.find(y => y.id === s.taskId);
+    html += ring(0, `${m}:00`, "ready") + (other ? `<p class="small muted">Starting here ends the session on "${esc(other.title)}" and saves its time.</p>` : "") +
+      `<div class="chips" style="justify-content:center">${PCFG.focus.map(v => `<button class="pick${m === v ? " on" : ""}" data-act="focus-len" data-v="${v}">${v} min</button>`).join("")}</div>
+      <button class="btn block" data-act="focus-start">Start focus</button><button class="btn text" data-act="focus-done">Mark task done</button>`;
+  }
+  return html + `</main>`;
+}
+
+function viewPlan() {
+  const t = todayEpoch(), r = P.ratio(data, t);
+  const doneT = P.tasksFor(data, t).filter(x => x.done), habitsDone = data.habits.filter(h => S.done(h, t)).length;
+  const unfinished = P.tasksFor(data, t).filter(x => !x.done).concat(P.leftovers(data, t));
+  const next = P.tasksFor(data, t + 1), planned = next.reduce((a, x) => a + x.estimate, 0);
+  if (ui.win == null) { const w = data.wins.find(w => w.day === t); ui.win = w ? w.text : ""; }
+  let html = bar("Plan tomorrow") + `<main class="stack">
+    <div class="card stack" style="gap:6px"><div class="plan-step"><i>1</i>Today's wins</div>
+      ${!doneT.length && !habitsDone ? `<div class="small muted">Nothing ticked yet, and that's fine. A small step still counts.</div>` : ""}
+      ${doneT.map(x => `<div>✓ ${esc(x.title)}</div>`).join("")}${habitsDone ? `<div>✓ ${habitsDone} habit${habitsDone === 1 ? "" : "s"} checked in</div>` : ""}
+      <label class="field" style="margin-top:6px"><span>One small win from today</span><input class="input" id="pl-win" maxlength="140" value="${esc(ui.win)}" placeholder="Finished the first draft" autocomplete="off"></label>
+      <div class="small muted">Small steps forward on work that matters are what keep motivation up.</div></div>
+    <div class="card"><div class="plan-step"><i>2</i>Not finished</div>
+      ${unfinished.length ? `<div class="small muted">Move each to tomorrow, or let it go. Letting go is a real choice.</div>${unfinished.map(x => moveRow(x, t, t + 1, "Tomorrow")).join("")}` : `<div class="small muted">Nothing left over.</div>`}</div>
+    <div class="card"><div class="plan-step"><i>3</i>Tomorrow's top 3</div>
+      ${next.map(x => taskRow(x, false)).join("")}
+      ${next.length < PCFG.maxTasks ? `<button class="btn tonal" data-act="task-add" data-d="${t + 1}" style="margin-top:8px">${I.plus}${next.length ? "Add a task" : "Add tomorrow's first task"}</button>` : ""}
+      ${planned ? `<div class="small muted" style="margin-top:8px">Planned: ${P.mins(planned)}${r != null ? `. At your usual pace that's about ${P.mins(P.realistic(planned, r))}` : ""}. Keep about a fifth of the day free for surprises.</div>` : ""}</div>
+    <button class="btn block" data-act="close-day">Close my workday</button>
+    ${unfinished.some(x => x.day === t) ? `<div class="small muted" style="text-align:center">Today's unsorted tasks move to tomorrow.</div>` : ""}</main>`;
+  return html;
+}
+
+function planningCard(t) {
+  const mon = mondayOf(t), wk = data.tasks.filter(x => x.day >= mon && x.day <= mon + 6 && !x.letGo);
+  const focus = data.tasks.filter(x => x.day >= mon && x.day <= mon + 6).reduce((a, x) => a + x.actual, 0), r = P.ratio(data, t), wins = P.wins(data, mon, t);
+  return `<div class="card"><b>Planning this week</b><div class="tiles num" style="--n:3;margin-top:10px"><div class="tile"><b>${wk.filter(x => x.done).length}/${wk.length}</b><span>top tasks done</span></div><div class="tile"><b>${focus ? P.mins(focus) : "–"}</b><span>focus time</span></div><div class="tile"><b>${r != null ? P.ratioLabel(r) : "–"}</b><span>time vs estimate</span></div></div>
+    <div class="small muted" style="margin-top:10px">${r != null ? `Your timed tasks take ${P.ratioLabel(r)} as long as you expect. The app uses this when you plan.` : `Time ${Math.max(0, PCFG.minTimed - P.timed(data, t).length)} more tasks with Focus to learn how long your tasks really take.`}</div>
+    ${wins.length ? `<div class="small" style="margin-top:12px;font-weight:800;color:var(--primary)">Small wins</div>${wins.slice(0, 7).map(w => `<div style="margin-top:4px">${P.dayName(w.day, t)} · ${esc(w.text)}</div>`).join("")}` : ""}</div>`;
+}
+
+function habitCard(h, t, isToday) {
+  const lvl = S.level(h, t), done = lvl > 0, pop = ui.justDone === h.id, n = S.total(h), rest = !S.scheduled(h, t), now = todayEpoch();
+  let burst = "";
+  if (pop && motionOK() && data.settings.celebration > 0) {
+    burst = "<b></b>";
+    if (data.settings.celebration === 2) for (let i = 0; i < 10; i++) { const a = (i * 36 + 15) * Math.PI / 180; burst += `<i style="--dx:${(Math.cos(a) * 36).toFixed(1)}px;--dy:${(Math.sin(a) * 36).toFixed(1)}px"></i>`; }
+  }
+  const steps = h.subtasks.length, sd = S.stepsDone(h, t), open = !!ui.open[h.id];
+  return `<div class="card habit${done || rest ? " done" : ""}" style="--hc:${color(h.colorIndex)}" data-act="open" data-id="${h.id}" role="button" tabindex="0" aria-label="${esc(h.name)} details">
+    <div class="top">${hicon(h.icon)}
+      <div class="body"><h3>${esc(h.name)}</h3>
+        <div class="recipe">${esc(steps ? (h.anchor || "Routine") : S.recipe(h))}</div>
+        <div class="meta num">${rest && S.weekMet(h, t) ? `This week's target met · ${S.daysLabel(h)}` : rest ? `Rest day · ${S.daysLabel(h)}` : `${h.perWeek > 0 ? `${S.weekDone(h, mondayOf(t))} of ${h.perWeek} this week · ` : ""}${S.inLast(h, 30, now)}/${S.window(h, 30, now)} days · ${S.rank(n)[1]}`}</div></div>
+      <button class="check${done ? " on" : ""}${pop ? " pop" : ""}" data-act="check" data-id="${h.id}" role="checkbox" aria-checked="${done}" aria-label="${done ? "Undo " : "Mark done: "}${esc(h.name)}">
+        <span class="burst">${burst}</span>
+        <svg viewBox="0 0 56 56"><circle class="o" cx="28" cy="28" r="25"/><circle class="f" cx="28" cy="28" r="26.5"/><path class="tk" pathLength="1" d="M17.4 28 L25.2 35.6 L38.6 20.4"/></svg>
+      </button></div>
+    ${steps ? `<button class="steps-head" data-act="toggle-steps" data-id="${h.id}" aria-expanded="${open}"><div class="grow"><div class="steps-bar">${h.subtasks.map((_, i) => `<i class="${i < sd ? "on" : ""}"></i>`).join("")}</div><div class="small muted" style="margin-top:6px;font-weight:600">${sd} of ${steps} steps</div></div>${I.chev}</button>
+      <div class="steps${open ? " open" : ""}"><div>${h.subtasks.map(s => stepRow(h, t, s)).join("")}</div></div>` : ""}
+    ${isToday && !done && !rest && S.missedRow(h, t) >= CFG.comebackGap ? `<div class="nudge">Welcome back. Just the tiny version today; that's all it takes to restart.</div>` : isToday && S.missTwice(h, t) ? `<div class="nudge">Never miss twice. The tiny version counts today.</div>` : ""}
+    ${lvl === 1 && h.fullVersion ? `<button class="fullv" data-act="full" data-id="${h.id}">I did the full version too</button>` : ""}
+    ${lvl === 2 ? `<div class="meta hc-text" style="margin-top:8px">Full version done</div>` : ""}
+  </div>`;
+}
+const stepRow = (h, t, s) => { const on = S.stepOn(h, t, s.id); return `<button class="step-row${on ? " on" : ""}" data-act="step" data-id="${h.id}" data-s="${s.id}" role="checkbox" aria-checked="${on}"><span class="box">${I.tick}</span><span>${esc(s.title)}</span></button>`; };
+
+/* ---------- Wizard ---------- */
+const STEPS = 4;
+function viewEdit() {
+  const h = ui.draft, s = ui.step;
+  let html = bar(ui.isNew ? "New habit" : "Edit habit");
+  const dots = Array.from({ length: STEPS }, (_, i) => `<i class="${i <= s ? "on" : ""}${i === s ? " cur" : ""}"></i>`).join("");
+  html += `<main class="stack" style="--hc:${color(h.colorIndex)}"><div class="row"><div class="dots">${dots}</div><span class="small muted">Step ${s + 1} of ${STEPS}</span></div>
+    <div class="card soft row" style="align-items:flex-start">${hicon(h.icon, "sm")}<div class="grow"><div id="pv-id" style="font-weight:800">${h.identity ? "I am becoming " + esc(h.identity) + "." : "Your recipe"}</div><div id="pv-r">${esc(S.recipe(h))}</div></div></div>
+    <section class="stack step" style="margin-top:6px">`;
+  const f = (key, label, ph) => `<label class="field"><span>${label}</span><input class="input" id="f-${key}" data-field="${key}" value="${esc(h[key])}" placeholder="${esc(ph)}" autocomplete="off"></label>`;
+  if (s === 0 && ui.isNew) html += `<div class="field"><span>Start from a template</span><p class="small muted" style="margin-top:-2px">One tap fills in the recipe. Change anything to make it yours.</p><div class="tpl">${CFG.templates.map((tp, i) => `<button class="pick${h.name === tp[0] && h.icon === tp[1] ? " on" : ""}" data-act="tpl" data-i="${i}"><svg viewBox="0 0 24 24">${HICON[tp[1]]}</svg>${tp[0]}</button>`).join("")}</div></div>`;
+  if (s === 0) html += `<h2>Who do you want to become?</h2><p class="muted">Every time you do the habit, it is a vote for this identity.</p>${f("identity", "I am becoming…", "a reader")}${f("name", "Habit name", "Read")}
+    <div class="field"><span>Icon</span><div class="icons">${CFG.icons.map(([k, l]) => `<button class="ipick${h.icon === k ? " on" : ""}" data-act="icon" data-v="${k}" aria-label="${l}" title="${l}">${hicon(k)}</button>`).join("")}</div></div>`;
+  if (s === 1) html += `<h2>When will you do it?</h2><p class="muted">Attach it to something you already do every day. That routine becomes the cue. Morning anchors tend to stick fastest.</p><div class="chips">${CFG.anchors.map(a => `<button class="pick${h.anchor === a ? " on" : ""}" data-act="anchor" data-v="${esc(a)}">${esc(a)}</button>`).join("")}</div>${f("anchor", "Or write your own", "After I park the car")}`;
+  if (s === 2) {
+    html += `<h2>Make it tiny</h2><p class="muted">The two-minute version always counts, even on your worst day. Do more when you feel like it.</p>${f("tinyVersion", "Two-minute version", "read 2 pages")}${f("fullVersion", "Full version (optional)", "read for 20 minutes")}
+      <div class="field" style="margin-top:6px"><span>Steps (optional)</span><p class="small muted" style="margin-top:-2px">For a routine, list its steps. The habit counts as done when every step is ticked.</p></div>`;
+    h.subtasks.forEach((st, i) => { html += `<div class="step-edit"><input class="input" id="st-${st.id}" data-sub="${st.id}" value="${esc(st.title)}" placeholder="Step ${i + 1}" aria-label="Step ${i + 1}" autocomplete="off"><button class="icon-btn" data-act="del-step" data-s="${st.id}" aria-label="Remove step ${i + 1}">${I.close}</button></div>`; });
+    if (h.subtasks.length < CFG.maxSteps) html += `<div><button class="btn outline" data-act="add-step">${I.plus}Add a step</button></div>`;
+  }
+  if (s === 3) {
+    const hh = String(h.reminderHour).padStart(2, "0") + ":" + String(h.reminderMinute).padStart(2, "0");
+    html += `<h2>Set it up to succeed</h2><p class="muted">Same place, a gentle cue, and a backup plan for the day things go wrong.</p>${f("place", "Where? (optional)", "in the living room chair")}
+      <div class="field"><span>Which days?</span><div class="chips"><button class="pick${!(h.perWeek > 0) ? " on" : ""}" data-act="pw" data-v="0">Set days</button><button class="pick${h.perWeek > 0 ? " on" : ""}" data-act="pw" data-v="${h.perWeek || 3}">Any days, a number per week</button></div>
+      ${h.perWeek > 0 ? `<div class="daypick">${[1, 2, 3, 4, 5, 6].map(n => `<button class="pick${h.perWeek === n ? " on" : ""}" data-act="pw" data-v="${n}">${n}</button>`).join("")}</div><p class="small muted">${h.perWeek} ${h.perWeek === 1 ? "time" : "times"} a week, on any days. One busy day can't spoil the week; only a week that falls short counts as missed.</p></div>` : `<div class="daypick">${["M","T","W","T","F","S","S"].map((l, i) => `<button class="pick${!h.days.length || h.days.includes(i) ? " on" : ""}" data-act="wday" data-i="${i}" aria-pressed="${!h.days.length || h.days.includes(i)}" aria-label="${WDAYS[i]}">${l}</button>`).join("")}</div><p class="small muted">${!h.days.length ? "Every day. Daily habits form fastest." : `${h.days.length} days a week. Other days are rest days and never count as missed.`}</p></div>`}
+      <div class="field"><span>Colour</span><div class="swatches">${CFG.colors.map((c, i) => `<button class="sw${h.colorIndex === i ? " on" : ""}" style="--c:${c}" data-act="color" data-i="${i}" aria-label="Colour ${i + 1}"></button>`).join("")}</div></div>
+      <div class="card stack" style="gap:8px"><div class="toggle"><div class="grow"><b>Cue reminder</b><div class="small muted">Rings in the Android app, just after your anchor. Skipped on days you've already done it.</div></div><button class="switch${h.reminderOn ? " on" : ""}" data-act="rem" role="switch" aria-checked="${h.reminderOn}" aria-label="Cue reminder"></button></div>
+      ${h.reminderOn ? `<label class="field"><span>Around</span><input class="input" type="time" id="f-time" data-field="time" value="${hh}"></label>` : ""}</div>
+      <b>If something gets in the way…</b>${f("obstacle", "If… (obstacle)", "I'm too tired")}${f("backup", "…then I will (backup plan)", "read one paragraph")}`;
+  }
+  html += `${ui.err ? `<div class="err">${esc(ui.err)}</div>` : ""}</section></main>
+    <nav class="wizard-nav"><div><button class="btn outline" data-act="wprev">${s ? "Back" : "Cancel"}</button>${s < STEPS - 1 && [0, 1, 2].every(i => !wizardError(i, h)) ? `<button class="btn text" data-act="wsave">Save now</button>` : ""}<button class="btn" data-act="wnext">${s < STEPS - 1 ? "Next" : "Save habit"}</button></div></nav>`;
+  return html;
+}
+function wizardError(s, h) {
+  if (s === 0 && !h.name.trim()) return "Give the habit a short name.";
+  if (s === 1 && !h.anchor.trim()) return "Choose an anchor or write your own.";
+  if (s === 2 && !h.tinyVersion.trim() && !h.subtasks.some(x => x.title.trim())) return "Add a two-minute version or at least one step. It is what makes the habit stick.";
+  return "";
+}
+
+/* ---------- Detail ---------- */
+function viewDetail(id) {
+  const h = habit(id); if (!h) { ui.stack = []; return viewTab(); }
+  const t = todayEpoch(), n = S.total(h), rk = S.rank(n), nx = S.next(n), col = color(h.colorIndex);
+  let html = `<div style="--hc:${col};--tc:color-mix(in oklab, ${col} 72%, var(--ink))">` + bar("", `<button class="icon-btn" data-act="edit" data-id="${h.id}" aria-label="Edit">${I.edit}</button><button class="icon-btn" data-act="del" data-id="${h.id}" aria-label="Delete">${I.trash}</button>`);
+  const tm = `${((h.reminderHour + 11) % 12) + 1}:${String(h.reminderMinute).padStart(2, "0")} ${h.reminderHour < 12 ? "AM" : "PM"}`;
+  html += `<main class="stack"><div class="row">${hicon(h.icon, "lg")}<div><h1 style="font-size:24px;font-weight:800">${esc(h.name)}</h1><div class="muted small">${h.graduatedDay != null ? "Graduated · in your Hall of Mastery" : "Started " + fmtShort(h.createdDay)} · ${S.daysLabel(h)}${h.sample ? " · sample" : ""}</div></div></div>
+    <div class="card soft stack" style="gap:4px">${h.identity ? `<b style="font-size:16px">I am becoming ${esc(h.identity)}.</b>` : ""}<div>${esc(S.recipe(h))}</div>
+    ${h.fullVersion ? `<div class="small">Full version: ${esc(h.fullVersion)}</div>` : ""}
+    ${h.obstacle ? `<div class="small">If ${esc(h.obstacle)}, then ${esc(h.backup || "I will do the tiny version")}.</div>` : ""}
+    ${h.reminderOn && h.graduatedDay == null ? `<div class="small" style="opacity:.8">Cue reminder around ${tm}</div>` : ""}</div>`;
+  if (h.subtasks.length) {
+    const sd = S.stepsDone(h, t);
+    html += `<div class="card stack" style="gap:8px"><div class="row"><b class="grow">Today's steps</b><b class="hc-text">${sd} of ${h.subtasks.length}</b></div><div class="steps-bar">${h.subtasks.map((_, i) => `<i class="${i < sd ? "on" : ""}"></i>`).join("")}</div><div>${h.subtasks.map(s => stepRow(h, t, s)).join("")}</div></div>`;
+  }
+  html += `<div class="tiles num"><div class="tile"><b>${S.inLast(h, 30, t)}/${S.window(h, 30, t)}</b><span>last 30 days</span></div><div class="tile"><b>${S.run(h, t)}</b><span>current run</span></div><div class="tile"><b>${S.best(h)}</b><span>best run</span></div><div class="tile"><b>${n}</b><span>total days</span></div></div>`;
+  { const ts = data.settings, tg = S.growth(h, t, ts.treeBack, ts.treeGoal), st = TREE.stageOf(tg / ts.treeGoal), nxs = TREE.STAGES[TREE.STAGES.indexOf(st) + 1];
+    html += `<div class="card stack" style="gap:10px"><div class="tree-box"><canvas class="tree" data-key="${h.id}" data-f="${tg / ts.treeGoal}" width="360" height="300" role="img" aria-label="Habit tree, step ${tg} of ${ts.treeGoal}: ${st[0]}"></canvas></div>
+      <div class="row"><b class="grow">${st[0]}</b><b class="hc-text num">Step ${tg} of ${ts.treeGoal}</b></div>
+      <div class="small muted">${nxs ? `${Math.max(1, Math.ceil(nxs[1] * ts.treeGoal) - tg)} more steps to ${nxs[0].toLowerCase()}.` : "Goal reached. The sun is out."} ${ts.treeBack ? "A day done is one step forward; a planned day missed is one step back." : "Every day done is one step forward."}</div></div>`; }
+  const dow = wdi(t), end = t + (6 - dow), start = end - 34;
+  let cells = ["M","T","W","T","F","S","S"].map(x => `<div class="h">${x}</div>`).join("");
+  for (let d = start; d <= end; d++) {
+    const l = S.level(h, d), fut = d > t, part = !l && h.subtasks.length && S.stepsDone(h, d) > 0;
+    cells += `<button class="day${fut ? " fut" : ""}${l ? " l" + l : ""}${part ? " part" : ""}${d < h.createdDay ? " pre" : ""}${!S.scheduled(h, d) ? " rest" : ""}${d === t ? " today" : ""}" ${fut ? "disabled" : `data-act="day" data-id="${h.id}" data-d="${d}"`} aria-label="${fmtShort(d)}${l ? (l === 2 ? ", full version" : ", done") : ", not done"}">${fut ? "" : dateOf(d).getUTCDate()}</button>`;
+  }
+  html += `<div class="card stack" style="gap:10px"><div><b>Last 5 weeks</b><div class="small muted">Tap a day to correct it. Missed days stay grey, never red; rest days are faint.</div></div><div class="cal">${cells}</div></div>`;
+  html += `<div class="card"><b>Last 16 weeks</b><div class="small muted" style="margin-bottom:10px">Lighter squares are tiny versions or partly done routines; the darkest are full versions.</div>${heatmap(16, t, d => d < h.createdDay || (!S.scheduled(h, d) && !S.done(h, d)) ? null : S.level(h, d) === 2 ? 1 : S.level(h, d) === 1 ? .6 : h.subtasks.length ? S.stepsDone(h, d) / h.subtasks.length * .35 : 0, col)}</div>`;
+  html += `<div class="card stack" style="gap:10px"><div><b>Habit strength</b><div class="small muted">How automatic it feels, from a weekly 4-question check. Habits usually climb fast, then level off.</div></div>${strengthChart(h)}
+    <div><button class="btn ${S.strengthDue(h, t) ? "" : "tonal"}" data-act="strength" data-id="${h.id}">${S.strengthDue(h, t) ? "Do this week's strength check" : "Update strength check"}</button></div></div>`;
+  html += `<div class="card stack" style="gap:8px"><b class="hc-text">The Way: ${rk[1]}</b><div>${rk[2]}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${(S.rankProg(n) * 100).toFixed(1)}%"></div></div>
+    <div class="small muted">${nx ? `${nx[0] - n} more days to ${nx[1]}` : "The forging is complete. Keep polishing."}</div>
+    <div class="small num" style="margin-top:6px;font-weight:700">Forging path: ${n} of 1,000 days</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, n / 10)}%;background:var(--gold)"></div></div></div>`;
+  if (h.graduatedDay == null) {
+    if (S.ready(h)) html += `<p class="small" style="color:var(--warn);font-weight:600">Your last three strength checks were strong. This habit may be running on its own.</p>`;
+    html += `<button class="btn outline block" data-act="grad" data-id="${h.id}">Graduate this habit</button>`;
+  }
+  return html + `</main></div>`;
+}
+function strengthChart(h) {
+  const s = h.strength.slice().sort((a, b) => a.day - b.day).slice(-12);
+  if (s.length < 2) return `<p>${s.length ? `Latest: ${s[0].score}/100. One more weekly check draws your curve.` : "No checks yet. The first one unlocks after about a week."}</p>`;
+  const W = 320, H = 150, L = 28, R = 10, T = 10, B = 22;
+  const x = i => L + i * (W - L - R) / (s.length - 1), y = v => T + (100 - v) / 100 * (H - T - B);
+  const pts = s.map((e, i) => `${x(i).toFixed(1)},${y(e.score).toFixed(1)}`).join(" ");
+  const first = dateOf(s[0].day), last = dateOf(s[s.length - 1].day);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Strength rose from ${s[0].score} to ${s[s.length - 1].score} out of 100">
+    ${[0, 50, 100].map(v => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${v}</text>`).join("")}
+    <line class="goal" x1="${L}" x2="${W - R}" y1="${y(CFG.graduateScore)}" y2="${y(CFG.graduateScore)}"/>
+    <polyline class="line" pathLength="1" points="${pts}"/>
+    ${s.map((e, i) => `<circle class="pt" cx="${x(i).toFixed(1)}" cy="${y(e.score).toFixed(1)}" r="${i === s.length - 1 ? 5.5 : 3.5}"/>`).join("")}
+    <text x="${L}" y="${H - 5}">${first.getUTCDate()} ${MONTHS[first.getUTCMonth()]}</text><text x="${W - R}" y="${H - 5}" text-anchor="end">${last.getUTCDate()} ${MONTHS[last.getUTCMonth()]}</text>
+  </svg><div class="small muted">Dashed line = ${CFG.graduateScore}, the level where a habit feels automatic. Latest: ${s[s.length - 1].score}/100</div>`;
+}
+
+/* ---------- Insights ---------- */
+function viewInsights() {
+  const t = todayEpoch(), hs = data.habits;
+  let html = pageHead("Insights", "Your practice at a glance") + `<main class="stack">`;
+  if (data.tasks.length || data.wins.length) html += planningCard(t);
+  if (!hs.length) return html + `<div class="card"><b>Your charts appear here</b><p class="muted">Add a habit on Today and check it in. The heatmap and trends fill in day by day.</p></div></main>`;
+  const weekly = S.weekly(hs, 8, t), wd = S.byWeekday(hs, 8, t), tw = weekly[weekly.length - 1];
+  const best = Math.max(0, ...hs.map(S.best));
+  html += `<div class="tiles num" style="--n:3"><div class="tile"><b>${tw == null ? "–" : Math.round(tw * 100) + "%"}</b><span>this week</span></div><div class="tile"><b>${best}</b><span>best run (days)</span></div><div class="tile"><b>${S.checkIns(hs)}</b><span>check-ins</span></div></div>`;
+  html += `<div class="card"><b>Last 16 weeks</b><div class="small muted" style="margin-bottom:10px">Darker means more of your habits done that day.</div>${heatmap(16, t, d => S.dayRate(hs, d), "var(--primary)")}</div>`;
+  const mons = Array.from({ length: 8 }, (_, i) => mondayOf(t) - 7 * (7 - i)).map(m => `${dateOf(m).getUTCDate()}/${dateOf(m).getUTCMonth() + 1}`);
+  html += `<div class="card"><b>Weekly completion</b><div class="small muted" style="margin-bottom:8px">Share of planned check-ins done each week (weeks start Monday).</div>${rateBars(weekly, mons, "var(--primary)", weekly.length - 1)}</div>`;
+  const known = wd.map((v, i) => [v, i]).filter(x => x[0] != null), weakest = known.length >= 5 ? known.reduce((a, b) => b[0] < a[0] ? b : a)[1] : -1;
+  html += `<div class="card"><b>By day of the week</b><div class="small muted" style="margin-bottom:8px">${weakest >= 0 ? `${WDAYS[weakest]} is your hardest day. Plan a smaller version for it.` : "Average completion for each weekday, last 8 weeks."}</div>${rateBars(wd, ["M","T","W","T","F","S","S"], "var(--teal)", weakest)}</div>`;
+  html += `<div class="card stack" style="gap:8px"><b>Habits · last 30 days</b>`;
+  for (const h of hs.filter(x => x.graduatedDay == null).concat(hs.filter(x => x.graduatedDay != null))) {
+    const dn = S.inLast(h, 30, t), w = S.window(h, 30, t);
+    html += `<button class="card inset row" style="--hc:${color(h.colorIndex)};padding:12px" data-act="open" data-id="${h.id}">${hicon(h.icon, "sm")}<div class="grow"><b>${esc(h.name)}</b><div class="small muted">${dn} of ${w} days · ${S.rank(S.total(h))[1]}</div></div><span class="mini">${ringSvg("", dn / w, 20, 5, 46)}<b>${Math.round(dn * 100 / w)}%</b></span></button>`;
+  }
+  html += `</div><button class="card soft" data-act="push" data-r="review"><b>Weekly review</b><div class="muted small">Look back at the week and adjust what isn't working.</div></button></main>`;
+  return html;
+}
+
+/* ---------- Review ---------- */
+function viewReview() {
+  const t = todayEpoch(), active = data.habits.filter(h => h.graduatedDay == null);
+  let html = bar("Weekly review") + `<main class="stack">`;
+  const wins = P.wins(data, t - 6, t);
+  if (wins.length) html += `<div class="card soft"><b>This week's small wins</b>${wins.map(w => `<div style="margin-top:4px">${P.dayName(w.day, t)} · ${esc(w.text)}</div>`).join("")}</div>`;
+  html += `<div class="eyebrow">This week</div>`;
+  if (!active.length) html += `<p class="muted">No active habits yet.</p>`;
+  for (const h of active) {
+    const wk = S.inLast(h, 7, t), w = S.window(h, 7, t);
+    html += `<div class="card stack" style="--hc:${color(h.colorIndex)};gap:6px"><div class="row">${hicon(h.icon, "sm")}<b class="grow">${esc(h.name)}</b><span class="num" style="font-weight:800">${wk} of ${w} days</span></div>
+      ${w >= 4 && wk * 2 < w ? `<div class="small" style="color:var(--warn);font-weight:600">Struggling? Make it smaller or move it to a stronger anchor. It's the design, not you.</div><div class="row" style="gap:4px"><button class="btn text" data-act="fix" data-id="${h.id}" data-s="2">Make it smaller</button><button class="btn text" data-act="fix" data-id="${h.id}" data-s="1">Change anchor</button></div>`
+        : wk === w && w >= 3 ? `<div class="small muted">A perfect week. Consider the full version, or keep it steady.</div>` : ""}</div>`;
+  }
+  html += `<div class="eyebrow" style="margin-top:8px">Reflect</div>
+    <label class="field"><span>What worked?</span><textarea class="input" id="rv-w" rows="2"></textarea></label>
+    <label class="field"><span>What got in the way?</span><textarea class="input" id="rv-b" rows="2"></textarea></label>
+    <label class="field"><span>One change for next week</span><textarea class="input" id="rv-c" rows="2"></textarea></label>
+    <button class="btn block" data-act="rsave">Finish review</button>`;
+  if (data.reviews.length) {
+    html += `<div class="eyebrow" style="margin-top:12px">Past reviews</div>`;
+    for (const r of data.reviews.slice(0, 6)) html += `<div class="card stack" style="gap:2px"><div class="small muted">${fmtShort(r.day)}</div>${r.worked ? `<div>Worked: ${esc(r.worked)}</div>` : ""}${r.blocked ? `<div>In the way: ${esc(r.blocked)}</div>` : ""}${r.change ? `<div>Change: ${esc(r.change)}</div>` : ""}</div>`;
+  }
+  return html + `</main>`;
+}
+
+/* ---------- The Way ---------- */
+function viewWay() {
+  const active = data.habits.filter(h => h.graduatedDay == null), grad = data.habits.filter(h => h.graduatedDay != null);
+  let html = pageHead("The Way", "A thousand days of practice") + `<main class="stack"><div class="card row" style="align-items:flex-start;gap:16px">${enso(60, true)}<div><div class="quote">A thousand days to forge, ten thousand to polish.</div><div class="small muted" style="margin-top:6px">Musashi, The Book of Five Rings (1645). Each habit's practice is counted on that path.</div></div></div>`;
+  for (const h of active) {
+    const n = S.total(h);
+    html += `<button class="card stack" style="--hc:${color(h.colorIndex)};gap:8px" data-act="open" data-id="${h.id}"><div class="row">${hicon(h.icon, "sm")}<b class="grow">${esc(h.name)}</b><span class="hc-text" style="font-weight:800">${S.rank(n)[1]}</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, n / 10)}%"></div></div><div class="small muted num">${n} of 1,000 days</div></button>`;
+  }
+  html += `<div class="eyebrow" style="margin-top:8px">Hall of Mastery</div>`;
+  if (!grad.length) html += `<p class="muted">Graduated habits appear here once they run on their own.</p>`;
+  for (const h of grad) html += `<div class="card mastery row" style="--hc:${color(h.colorIndex)}">${hicon(h.icon, "sm")}<div class="grow"><b>${esc(h.name)}</b><div class="small muted">Graduated ${fmtShort(h.graduatedDay)} · ${S.total(h)} days</div></div><button class="btn text" data-act="restore" data-id="${h.id}">Bring back</button></div>`;
+  html += `<div class="eyebrow" style="margin-top:8px">Principles</div>`;
+  for (const [a, b] of CFG.principles) html += `<div class="card"><b style="color:var(--primary)">${a}</b><div>${b}</div></div>`;
+  return html + `</main>`;
+}
+
+/* ---------- Profile ---------- */
+function viewProfile() {
+  const s = data.settings, hs = data.habits;
+  const seg = (key, labels) => `<div class="chips">${labels.map((l, i) => `<button class="pick${s[key] === i ? " on" : ""}" data-act="set" data-k="${key}" data-v="${i}">${l}</button>`).join("")}</div>`;
+  const acct = me.signedIn
+    ? `<b>Signed in with your Claude account</b><div class="small muted">Your habits are private to you and follow you to any device where you open this page.</div>`
+    : `<b>Saved on this device</b><div class="small muted">Your habits stay in this browser. Use Save backup file to move them to another device or to the Android app.</div>`;
+  return pageHead("Profile") + `<main class="stack">
+    <div class="card stack" style="gap:14px"><div class="row"><span class="avatar lg">${esc(initials())}</span><div class="grow"><div style="font-size:18px;font-weight:800">${esc(displayName() || "You")}</div>${acct}</div></div>
+      <div class="tiles num" style="--n:3"><div class="tile" style="box-shadow:none;background:var(--surface-2)"><b>${hs.filter(h => h.graduatedDay == null).length}</b><span>active</span></div><div class="tile" style="box-shadow:none;background:var(--surface-2)"><b>${hs.filter(h => h.graduatedDay != null).length}</b><span>graduated</span></div><div class="tile" style="box-shadow:none;background:var(--surface-2)"><b>${S.checkIns(hs)}</b><span>check-ins</span></div></div></div>
+    <label class="field"><span>Name shown in greetings</span><input class="input" id="s-name" value="${esc(s.userName)}" placeholder="${esc(me.name || "Your name")}" autocomplete="off"></label>
+    <div class="card stack" style="gap:8px"><div class="eyebrow" style="color:var(--primary)">Focus</div><div>Active habits at once: <b class="num" id="s-fl">${s.focusLimit}</b></div><div class="small muted">Fewer habits, done consistently, beat a long list. Three is a good start.</div><input type="range" id="s-focus" min="1" max="${CFG.maxFocus}" step="1" value="${s.focusLimit}" aria-label="Focus limit"></div>
+    <div class="card stack" style="gap:10px"><div class="eyebrow" style="color:var(--primary)">Celebrations</div>${seg("celebration", ["Subtle", "Standard", "Festive"])}
+      <div class="toggle"><div class="grow">Vibrate on check-in (phones that allow it)</div><button class="switch${s.haptics ? " on" : ""}" data-act="tog" data-k="haptics" role="switch" aria-checked="${s.haptics}" aria-label="Vibrate on check-in"></button></div></div>
+    <div class="card stack" style="gap:10px"><div class="eyebrow" style="color:var(--primary)">Daily planning</div>
+      <div class="field"><span>Focus session length</span><div class="chips">${PCFG.focus.map(m => `<button class="pick${s.focusMinutes === m ? " on" : ""}" data-act="set" data-k="focusMinutes" data-v="${m}">${m} min</button>`).join("")}</div></div>
+      <div class="field"><span>Break after a session</span><div class="chips">${PCFG.breaks.map(m => `<button class="pick${s.breakMinutes === m ? " on" : ""}" data-act="set" data-k="breakMinutes" data-v="${m}">${m} min</button>`).join("")}</div></div>
+      <div class="small muted">The evening "Plan tomorrow" reminder and task reminders ring in the Android app.</div></div>
+    <div class="card stack" style="gap:10px"><div class="eyebrow" style="color:var(--primary)">Appearance</div>${seg("themeMode", ["System", "Light", "Dark"])}
+      <div class="field"><span>Theme colour</span><div class="accents">${CFG.accents.map((a, i) => `<button class="${(+s.accent || 0) === i ? "on" : ""}" data-act="accent" data-i="${i}" aria-pressed="${(+s.accent || 0) === i}"><i style="--c:light-dark(${a[1]}, ${a[2]})"></i>${a[0]}</button>`).join("")}</div></div></div>
+    <div class="card stack" style="gap:12px"><div class="eyebrow" style="color:var(--primary)">Habit tree</div>
+      <div class="tree-box"><canvas class="tree" data-key="preview" data-f="${ui.treePrev == null ? .95 : ui.treePrev}" width="360" height="300" role="img" aria-label="Preview of your habit tree"></canvas></div>
+      <div class="chips">${[["Growing", .4], ["In bloom", .84], ["Fruit", .95], ["Goal reached", 1]].map(([l, f]) => `<button class="pick${(ui.treePrev == null ? .95 : ui.treePrev) === f ? " on" : ""}" data-act="treeprev" data-v="${f}">${l}</button>`).join("")}</div>
+      ${[["Steps to the goal", "treeGoal", [66, 100, 365, 1000]], ["Shape", "treeShape", Object.keys(TREE.SHAPES)], ["Leaves", "treeLeaf", Object.keys(TREE.LEAVES), v => TREE.LEAVES[v][1]], ["Flowers", "treeFlower", Object.keys(TREE.FLOWERS), v => TREE.FLOWERS[v]], ["Fruit", "treeFruit", Object.keys(TREE.FRUITS), v => TREE.FRUITS[v]]].map(([l, k, vals, sw]) => `<div class="field"><span>${l}</span><div class="chips">${vals.map(v => `<button class="pick${s[k] === v ? " on" : ""}" data-act="tree" data-k="${k}" data-v="${v}">${sw ? `<span class="swatch"><i style="--c:${sw(v)}"></i>${v}</span>` : v}</button>`).join("")}</div></div>`).join("")}
+      <div class="toggle"><div class="grow">A missed day moves the tree one step back</div><button class="switch${s.treeBack ? " on" : ""}" data-act="tog" data-k="treeBack" role="switch" aria-checked="${s.treeBack}" aria-label="A missed day moves the tree back"></button></div></div>
+    <div class="card stack" style="gap:10px"><div class="eyebrow" style="color:var(--primary)">Your data</div>
+      <div class="small muted">Backups use the same file format as the Android app, so you can move habits between them.</div>
+      <div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn tonal" data-act="export">Save backup file</button><button class="btn outline" data-act="copy">Copy backup</button></div>
+      <label class="field"><span>Restore from a backup</span><input class="input" type="file" id="s-file" accept=".json,application/json,text/plain"></label>
+      <textarea class="input" id="s-paste" placeholder="…or paste the backup text here" rows="3">${esc(ui.importText)}</textarea>
+      <div><button class="btn outline" data-act="import">Restore pasted backup</button></div>
+      <div class="row" style="flex-wrap:wrap;gap:0"><button class="btn danger-text" data-act="reset">Clear all habits</button><button class="btn danger-text" data-act="wipe">Delete my data</button></div></div>
+    <div style="text-align:center;padding:10px 0" class="stack"><div style="display:flex;justify-content:center">${enso(40, false)}</div><b>Ensō Habits · web</b><div class="small muted">Developed by Sanka Chandrasiri</div></div></main>`;
+}
+
+/* ---------- Habit tree painting: eases toward the new step, forward or backward ---------- */
+const treeShown = {};
+let treeRaf = 0, treeLast = 0;
+const darkNow = () => { const t = document.documentElement.getAttribute("data-theme"); return t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches; };
+function paintTrees(now) {
+  const list = root.querySelectorAll("canvas.tree"); if (!list.length) { treeRaf = 0; return; }
+  const dt = now && treeLast ? Math.min(.05, (now - treeLast) / 1000) : 0; treeLast = now || 0;
+  const s = data.settings, o = { shape: s.treeShape, leaf: s.treeLeaf, flower: s.treeFlower, fruit: s.treeFruit }, dark = darkNow();
+  let moving = false;
+  list.forEach(cv => {
+    const key = cv.dataset.key, target = +cv.dataset.f;
+    let cur = treeShown[key]; if (cur == null) cur = Math.max(0, target - .05);
+    cur = !motionOK() ? target : target + (cur - target) * Math.exp(-dt / .22);
+    if (Math.abs(cur - target) < .0004) cur = target; else moving = true;
+    treeShown[key] = cur;
+    const d = Math.min(3, window.devicePixelRatio || 1), W = 360, H = 300;
+    if (cv.width !== W * d) { cv.width = W * d; cv.height = H * d; }
+    const ctx = cv.getContext("2d"); ctx.setTransform(d, 0, 0, d, 0, 0); TREE.draw(ctx, W, H, cur, o, dark, 0);
+  });
+  cancelAnimationFrame(treeRaf);
+  treeRaf = moving ? requestAnimationFrame(paintTrees) : 0; if (!moving) treeLast = 0;
+}
+
+/* ---------- Overlays ---------- */
+function viewLayer() {
+  let html = "";
+  if (ui.toast) html += `<div class="toast" role="status"><span>${esc(ui.toast)}</span>${toastUndo ? `<button data-act="undo">Undo</button>` : ""}</div>`;
+  if (ui.modal) {
+    const m = ui.modal;
+    html += `<div class="modal-wrap" data-act="mclose"><div class="modal" role="dialog" aria-modal="true" aria-label="${esc(m.title)}" data-stop="1"><h2>${esc(m.title)}</h2>${m.body}<div class="acts"><button class="btn text" data-act="mclose">${esc(m.cancel || "Cancel")}</button>${m.ok ? `<button class="btn ${m.danger ? "danger-text" : "text"}" data-act="mok" style="font-weight:800">${esc(m.ok)}</button>` : ""}</div></div></div>`;
+  }
+  if (ui.celebrate) {
+    const c = ui.celebrate;
+    html += `<div class="celebrate" data-act="cclose" role="dialog" aria-label="${esc(c.h)}"><canvas id="confetti"></canvas><div class="in">${enso(168, true)}<h2>${esc(c.h)}</h2><div class="hn">${esc(c.n)}</div><p>${esc(c.l)}</p><small>Tap to continue</small></div></div>`;
+  }
+  return html;
+}
+function strengthBody() {
+  const q = ["I do it automatically.", "I do it without having to consciously remember.", "I do it without thinking.", "I start doing it before I realise I'm doing it."];
+  return `<p class="muted">How much do you agree?</p>` + q.map((x, i) => `<div class="field"><span style="color:var(--ink);font-size:15px;font-weight:500">${x}</span><input type="range" min="1" max="5" step="1" value="3" id="sq${i}" aria-label="${x}"><div class="row small muted" style="justify-content:space-between"><span>Disagree</span><span>Agree</span></div></div>`).join("");
+}
+
+/* ===================== Render ===================== */
+const root = document.getElementById("root"), nav = document.getElementById("nav"), layer = document.getElementById("layer");
+let lastKey = null;
+function viewTab() { return { today: viewToday, insights: viewInsights, way: viewWay, profile: viewProfile }[ui.tab](); }
+function render() {
+  const rt = route();
+  let html;
+  if (rt.r === "edit") html = viewEdit();
+  else if (rt.r === "detail") html = viewDetail(rt.id);
+  else if (rt.r === "review") html = viewReview();
+  else if (rt.r === "task") html = viewTask(rt);
+  else if (rt.r === "focus") html = viewFocus(rt);
+  else if (rt.r === "plan") html = viewPlan();
+  else html = viewTab();
+  const key = rt.r + (rt.id || "") + (rt.r === "edit" ? ui.step : "") + ui.tab;
+  const fresh = lastKey !== key;
+  const ae = document.activeElement, aid = ae && ae.id, sel = ae && ae.selectionStart != null ? [ae.selectionStart, ae.selectionEnd] : null;
+  root.innerHTML = `<div class="${fresh ? "screen" + (ui.slide ? " from-" + ui.slide : "") : ""}">${html}</div>`;
+  ui.slide = null;
+  root.classList.toggle("nonav", !!ui.stack.length);
+  lastKey = key;
+  if (aid && !fresh) { const el = document.getElementById(aid); if (el) { el.focus(); if (sel) try { el.setSelectionRange(sel[0], sel[1]); } catch {} } }
+  if (!ui.stack.length && nav.firstChild) nav.querySelectorAll(".tab").forEach(b => { const on = b.dataset.to === ui.tab; b.classList.toggle("on", on); b.setAttribute("aria-current", on ? "page" : "false"); });
+  else nav.innerHTML = ui.stack.length ? "" : `<nav class="tabbar" aria-label="Sections"><div>${TABS.map(([k, l, ic]) => `<button class="tab${ui.tab === k ? " on" : ""}" data-act="tab" data-to="${k}" aria-current="${ui.tab === k ? "page" : "false"}"><span class="pill">${ic}</span>${l}</button>`).join("")}</div></nav>`;
+  layer.innerHTML = viewLayer();
+  paintTrees();
+  ui.justDone = null;
+  if (ui.celebrate) startConfetti();
+}
+
+/* ---------- Focus timer ---------- */
+function stopFocus() {
+  const f = data.focus; if (!f) return;
+  const spent = Math.max(0, Math.min(f.minutes, Math.floor((Date.now() - f.startMillis) / 6e4)));
+  const x = data.tasks.find(y => y.id === f.taskId); if (x) x.actual += spent;
+  data.focus = null; save();
+}
+let tickTimer = null;
+function tick() {
+  clearTimeout(tickTimer);
+  const f = data.focus;
+  if (f && Date.now() >= f.startMillis + f.minutes * 6e4) {   // session finished: save it and start the break
+    const x = data.tasks.find(y => y.id === f.taskId); if (x) x.actual += f.minutes;
+    data.focus = null; save();
+    if (route().r === "focus") ui.breakEnd = Date.now() + data.settings.breakMinutes * 6e4;
+    toast(`Focus session done. Take a ${data.settings.breakMinutes}-minute break.`);
+  }
+  const onFocus = route().r === "focus";
+  if (onFocus) render();
+  if (data.focus || (onFocus && ui.breakEnd > Date.now())) tickTimer = setTimeout(tick, 1000);
+}
+
+let confettiRun = 0;
+function startConfetti() {
+  const cv = document.getElementById("confetti"); if (!cv) return;
+  const run = ++confettiRun;
+  if (!motionOK() || data.settings.celebration !== 2) return;
+  const ctx = cv.getContext("2d"), dpr = window.devicePixelRatio || 1;
+  cv.width = cv.clientWidth * dpr; cv.height = cv.clientHeight * dpr; ctx.scale(dpr, dpr);
+  const W = cv.clientWidth, H = cv.clientHeight, cols = ["#F2C46B", "#8C9EFF", "#6ED5C5", "#FFFFFF"];
+  const ps = Array.from({ length: 70 }, (_, i) => ({ x: Math.random() * W, d: Math.random() * .35, v: .9 + Math.random() * .8, r: Math.random() * 360, c: cols[i % 4], w: 6 + Math.random() * 6 }));
+  const t0 = performance.now();
+  (function frame(now) {
+    if (run !== confettiRun || !document.getElementById("confetti")) return;
+    const p = Math.min(1, (now - t0) / 2800); ctx.clearRect(0, 0, W, H);
+    for (const q of ps) { const y = (p * q.v - q.d) * H * 1.2 - 20; if (y < -20 || y > H) continue; const x = q.x + Math.sin(p * 8 + q.x) * 18; ctx.save(); ctx.translate(x, y); ctx.rotate((q.r + p * 540) * Math.PI / 180); ctx.fillStyle = q.c; ctx.fillRect(-q.w / 2, -q.w / 4, q.w, q.w / 2); ctx.restore(); }
+    if (p < 1) requestAnimationFrame(frame);
+  })(t0);
+}
+let celebTimer = null;
+function celebrate(h, n, l) { ui.celebrate = { h, n, l }; render(); clearTimeout(celebTimer); celebTimer = setTimeout(() => { ui.celebrate = null; render(); }, 4600); }
+
+/* ===================== Actions ===================== */
+function afterLog(h, before) {
+  const n = S.total(h);
+  if (n > before && CFG.milestones.includes(n)) setTimeout(() => celebrate(n === 1 ? "First check-in" : `${n} days`, h.name, milestoneLine(n)), 650);
+}
+function setLog(h, day, lvl) {
+  const before = S.total(h);
+  if (lvl > 0) h.log[day] = lvl; else delete h.log[day];
+  if (h.subtasks.length) { if (lvl > 0) h.subLog[day] = h.subtasks.map(s => s.id); else delete h.subLog[day]; }
+  save(); afterLog(h, before);
+}
+function toggleStep(h, day, sid) {
+  const before = S.total(h), valid = h.subtasks.map(s => s.id);
+  let cur = (S.done(h, day) ? valid : (h.subLog[day] || [])).filter(x => valid.includes(x));
+  cur = cur.includes(sid) ? cur.filter(x => x !== sid) : cur.concat(sid);
+  if (cur.length) h.subLog[day] = cur; else delete h.subLog[day];
+  const all = valid.length && valid.every(x => cur.includes(x)), lvl = S.level(h, day);
+  if (all) h.log[day] = Math.max(lvl, 1); else delete h.log[day];
+  save(); afterLog(h, before);
+  return all && !lvl;
+}
+function openModal(m) { ui.modal = m; render(); }
+function selDay() { const t = todayEpoch(); return ui.day != null && ui.day <= t && ui.day >= mondayOf(t) ? ui.day : t; }
+
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  if (el.dataset.act === "mclose" && e.target !== el && !e.target.closest('button[data-act="mclose"]')) return;
+  const a = el.dataset.act, id = el.dataset.id, t = todayEpoch();
+  switch (a) {
+    case "tab": ui.day = null; goTab(el.dataset.to); break;
+    case "pickday": ui.day = +el.dataset.d === t ? null : +el.dataset.d; render(); break;
+    case "undo": { const u = toastUndo; toastUndo = null; ui.toast = null; clearTimeout(toastTimer); if (u) u(); render(); break; }
+    case "tpl": { const tp = CFG.templates[+el.dataset.i]; Object.assign(ui.draft, { name: tp[0], icon: tp[1], identity: tp[2], anchor: tp[3], tinyVersion: tp[4], fullVersion: tp[5], subtasks: tp[6].map(x => ({ id: uid(), title: x })) }); ui.err = ""; render(); break; }
+    case "wday": { const i = +el.dataset.i, cur = ui.draft.days.length ? ui.draft.days.slice() : [0, 1, 2, 3, 4, 5, 6]; const nx = (cur.includes(i) ? cur.filter(x => x !== i) : cur.concat(i)).sort(); if (nx.length) ui.draft.days = nx.length === 7 ? [] : nx; render(); break; }
+    case "push": if (el.dataset.r === "plan") ui.win = null; push({ r: el.dataset.r }); break;
+    case "pw": ui.draft.perWeek = +el.dataset.v; if (ui.draft.perWeek) ui.draft.days = []; render(); break;
+    case "task-add": ui.tdraft = blankTask(+el.dataset.d); push({ r: "task" }); setTimeout(() => { const i = document.getElementById("tk-title"); if (i) i.focus(); }); break;
+    case "task-open": { const x = data.tasks.find(y => y.id === el.dataset.t); if (x) { ui.tdraft = Object.assign({}, x); push({ r: "task", id: x.id }); } break; }
+    case "task-toggle": { const x = data.tasks.find(y => y.id === el.dataset.t); if (!x) break; x.done = !x.done; if (x.done) { buzz(); if (data.focus && data.focus.taskId === x.id) stopFocus(); } save(); render(); break; }
+    case "task-focus": ui.focusLen = null; push({ r: "focus", id: el.dataset.t }); break;
+    case "task-move": { const x = data.tasks.find(y => y.id === el.dataset.t); if (x) { x.day = +el.dataset.d; x.done = false; x.letGo = false; save(); render(); } break; }
+    case "task-letgo": { const x = data.tasks.find(y => y.id === el.dataset.t); if (x) { x.letGo = true; save(); render(); } break; }
+    case "tday": ui.tdraft.day = +el.dataset.d; render(); break;
+    case "ttime-any": ui.tdraft.time = -1; render(); break;
+    case "test": ui.tdraft.estimate = +el.dataset.v; render(); break;
+    case "task-save": { const x = ui.tdraft; if (!x.title.trim()) break; x.title = x.title.trim(); x.place = x.place.trim(); const i = data.tasks.findIndex(y => y.id === x.id); if (i >= 0) data.tasks[i] = x; else data.tasks.push(x); save(); pop(); break; }
+    case "task-del": openModal({ title: "Delete this task?", ok: "Delete", run: () => { const id = ui.tdraft.id; if (data.focus && data.focus.taskId === id) data.focus = null; data.tasks = data.tasks.filter(y => y.id !== id); save(); ui.stack.pop(); } }); break;
+    case "focus-len": ui.focusLen = +el.dataset.v; render(); break;
+    case "focus-start": { if (data.focus) stopFocus(); const m = ui.focusLen || data.settings.focusMinutes; data.focus = { taskId: route().id, startMillis: Date.now(), minutes: m }; data.settings.focusMinutes = m; ui.breakEnd = 0; save(); render(); tick(); break; }
+    case "focus-stop": stopFocus(); render(); break;
+    case "break-skip": ui.breakEnd = 0; render(); break;
+    case "focus-done": { const x = data.tasks.find(y => y.id === route().id); if (x && !x.done) { if (data.focus && data.focus.taskId === x.id) stopFocus(); x.done = true; buzz(); save(); } ui.breakEnd = 0; pop(); break; }
+    case "close-day": {
+      const t2 = todayEpoch(), w = (ui.win || "").trim();
+      data.wins = data.wins.filter(x => x.day !== t2); if (w) data.wins.unshift({ day: t2, text: w });
+      for (const x of P.tasksFor(data, t2)) if (!x.done) x.day = t2 + 1;
+      data.settings.closedDay = t2; ui.win = null; save(); pop();
+      celebrate("Workday closed", "Tomorrow is planned", "It's written down, so you can let it go until tomorrow."); break;
+    }
+    case "back": pop(); break;
+    case "open": if (e.target.closest(".check, .fullv, .steps-head, .step-row")) return; push({ r: "detail", id }); break;
+    case "check": {
+      const h = habit(id); if (!h) return;
+      const dd = selDay();
+      if (S.done(h, dd)) { setLog(h, dd, 0); render(); }
+      else { buzz(); setLog(h, dd, 1); ui.justDone = id; toast(`${h.name} done`, () => { const x = habit(id); if (x) setLog(x, dd, 0); }); }
+      break;
+    }
+    case "full": { const h = habit(id); buzz(); setLog(h, selDay(), 2); render(); break; }
+    case "toggle-steps": ui.open[id] = !ui.open[id]; render(); break;
+    case "step": { const h = habit(id), dd = route().r === "detail" ? t : selDay(); const wasOn = S.stepOn(h, dd, el.dataset.s); if (!wasOn) buzz(); if (toggleStep(h, dd, el.dataset.s)) ui.justDone = id; render(); break; }
+    case "new": {
+      const active = data.habits.filter(h => h.graduatedDay == null).length;
+      if (active >= data.settings.focusLimit) { toast(`Focus on ${data.settings.focusLimit} habits at a time. Graduate one, or raise the limit in Profile.`); break; }
+      ui.draft = blankHabit(data.habits.length); ui.step = 0; ui.isNew = true; push({ r: "edit" }); break;
+    }
+    case "clear-samples": data.tasks = data.tasks.filter(x => !x.sample); data.wins = data.wins.filter(x => !x.sample); data.habits = data.habits.filter(h => !h.sample); data.reviews = []; data.settings.lastReviewDay = null; save(); toast("Samples cleared. Create your first habit."); break;
+    case "icon": ui.draft.icon = el.dataset.v; render(); break;
+    case "anchor": ui.draft.anchor = el.dataset.v; ui.err = ""; render(); break;
+    case "color": ui.draft.colorIndex = +el.dataset.i; render(); break;
+    case "rem": ui.draft.reminderOn = !ui.draft.reminderOn; render(); break;
+    case "add-step": { const st = { id: uid(), title: "" }; ui.draft.subtasks.push(st); render(); const inp = document.getElementById("st-" + st.id); if (inp) inp.focus(); break; }
+    case "del-step": ui.draft.subtasks = ui.draft.subtasks.filter(s => s.id !== el.dataset.s); render(); break;
+    case "wprev": if (ui.step > 0) { ui.step--; ui.err = ""; render(); } else pop(); break;
+    case "wsave": case "wnext": {
+      const er = wizardError(ui.step, ui.draft);
+      if (er) { ui.err = er; render(); break; }
+      if (a === "wnext" && ui.step < STEPS - 1) { ui.step++; ui.err = ""; render(); window.scrollTo(0, 0); break; }
+      const d = ui.draft; for (const k of ["name","identity","anchor","tinyVersion","fullVersion","place","obstacle","backup"]) d[k] = d[k].trim();
+      d.subtasks = d.subtasks.map(s => ({ id: s.id, title: s.title.trim() })).filter(s => s.title);
+      const i = data.habits.findIndex(h => h.id === d.id);
+      if (i >= 0) data.habits[i] = d; else data.habits.push(d);
+      save(); const isNew = ui.isNew; pop();
+      if (isNew) toast(`${d.name} added. Do the tiny version today.`);
+      break;
+    }
+    case "edit": case "fix": {
+      ui.draft = JSON.parse(JSON.stringify(habit(id))); ui.step = a === "fix" ? +el.dataset.s : 0; ui.isNew = false; push({ r: "edit" }); break;
+    }
+    case "del": { const h = habit(id); openModal({ title: `Delete ${h.name}?`, body: `<p class="muted">Its whole history will be removed. Graduating keeps the history instead.</p>`, ok: "Delete", danger: true, run: () => { data.habits = data.habits.filter(x => x.id !== h.id); save(); ui.stack = []; } }); break; }
+    case "grad": { const h = habit(id); openModal({ title: `Graduate ${h.name}?`, cancel: "Not yet", body: `<p class="muted">It moves to your Hall of Mastery and reminders stop, freeing a slot for a new habit. You can bring it back any time.</p>`, ok: "Graduate", run: () => { h.graduatedDay = t; save(); ui.stack = []; ui.tab = "way"; setTimeout(() => celebrate("Graduated", h.name, "This habit now runs on its own. It lives in your Hall of Mastery."), 50); } }); break; }
+    case "restore": { const h = habit(id); h.graduatedDay = null; save(); render(); toast(`${h.name} is back on your Today list.`); break; }
+    case "day": { const h = habit(id), d = +el.dataset.d, l = S.level(h, d); setLog(h, d, l === 0 ? 1 : l === 1 && h.fullVersion ? 2 : 0); render(); break; }
+    case "strength": { const h = habit(id); openModal({ title: "Weekly strength check", body: strengthBody(), ok: "Save", run: () => {
+      const ans = [0, 1, 2, 3].map(i => +document.getElementById("sq" + i).value), sc = S.strengthScore(ans);
+      h.strength = h.strength.filter(x => x.day !== t).concat({ day: t, score: sc }); save(); setTimeout(() => toast(`Strength saved: ${sc}/100`), 0);
+    } }); break; }
+    case "mok": { const r = ui.modal && ui.modal.run; if (r) r(); ui.modal = null; render(); break; }
+    case "mclose": ui.modal = null; render(); break;
+    case "cclose": clearTimeout(celebTimer); ui.celebrate = null; render(); break;
+    case "rsave": {
+      const v = k => document.getElementById(k).value.trim();
+      data.reviews = [{ day: t, worked: v("rv-w"), blocked: v("rv-b"), change: v("rv-c") }].concat(data.reviews).slice(0, 104);
+      data.settings.lastReviewDay = t; save(); pop(); celebrate("Week reviewed", "Nice work", "Small adjustments every week beat big resolutions."); break;
+    }
+    case "set": data.settings[el.dataset.k] = +el.dataset.v; if (el.dataset.k === "themeMode") applyTheme(); save(); render(); break;
+    case "tree": data.settings[el.dataset.k] = el.dataset.k === "treeGoal" ? +el.dataset.v : el.dataset.v; save(); render(); break;
+    case "treeprev": ui.treePrev = +el.dataset.v; render(); break;
+    case "accent": data.settings.accent = +el.dataset.i; applyTheme(); save(); render(); break;
+    case "tog": data.settings[el.dataset.k] = !data.settings[el.dataset.k]; save(); render(); break;
+    case "copy": {
+      const txt = JSON.stringify(toExport(data), null, 2);
+      const fallback = () => { ui.importText = txt; render(); const ta = document.getElementById("s-paste"); ta.focus(); ta.select(); toast("Backup text selected below. Copy it with your keyboard or long-press."); };
+      try { navigator.clipboard.writeText(txt).then(() => toast("Backup copied"), fallback); } catch { fallback(); }
+      break;
+    }
+    case "export": (async () => {
+      const txt = JSON.stringify(toExport(data), null, 2);
+      const dl = window.claude && window.claude.use ? await claude.use("downloads").catch(() => null) : null;
+      if (!dl) { toast("Saving files isn't available here. Use Copy backup instead."); return; }
+      try { await dl.save({ filename: `enso-habits-backup-${new Date().toISOString().slice(0, 10)}.json`, data: txt }); toast("Backup saved"); }
+      catch { toast("Backup not saved."); }
+    })(); break;
+    case "import": doImport(document.getElementById("s-paste").value); break;
+    case "reset": openModal({ title: "Clear all habits?", body: `<p class="muted">This removes every habit, log and review. Save a backup first if you might want them.</p>`, ok: "Clear", danger: true, run: () => { data.habits = []; data.reviews = []; data.tasks = []; data.wins = []; data.focus = null; data.settings.lastReviewDay = null; save(); ui.tab = "today"; } }); break;
+    case "wipe": openModal({ title: "Delete my data?", body: `<p class="muted">Every habit, log, review and setting is deleted from ${store.mode === "db" ? "your account and " : ""}this browser. This can't be undone.</p>`, ok: "Delete", danger: true, run: async () => {
+      try { localStorage.removeItem(LOCAL_KEY); } catch {}
+      if (store.ref) { try { await store.ref.delete(); } catch {} }
+      data = { habits: [], settings: defaultSettings(), reviews: [], tasks: [], wins: [], focus: null }; applyTheme(); ui.tab = "today"; ui.stack = []; render(); toast("Your data was deleted");
+    } }); break;
+  }
+});
+document.addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches('.habit[role="button"]')) { e.preventDefault(); e.target.click(); }
+  if (e.key === "Escape" && (ui.modal || ui.celebrate)) { ui.modal = null; ui.celebrate = null; render(); }
+});
+document.addEventListener("input", e => {
+  const el = e.target;
+  if (ui.draft && route().r === "edit") {
+    if (el.dataset.field === "time") { const [h, m] = el.value.split(":").map(Number); if (!isNaN(h)) { ui.draft.reminderHour = h; ui.draft.reminderMinute = m || 0; } }
+    else if (el.dataset.field) ui.draft[el.dataset.field] = el.value;
+    else if (el.dataset.sub) { const st = ui.draft.subtasks.find(s => s.id === el.dataset.sub); if (st) st.title = el.value; }
+    const r = document.getElementById("pv-r"), p = document.getElementById("pv-id");
+    if (r) r.textContent = S.recipe(ui.draft);
+    if (p) p.textContent = ui.draft.identity ? `I am becoming ${ui.draft.identity}.` : "Your recipe";
+    if (ui.err) { ui.err = ""; const er = document.querySelector(".err"); if (er) er.remove(); }
+  }
+  if (ui.tdraft && route().r === "task" && el.dataset.tfield) {
+    const x = ui.tdraft, f = el.dataset.tfield;
+    if (f === "time") { const [h, m] = el.value.split(":").map(Number); x.time = isNaN(h) ? -1 : h * 60 + (m || 0); const any = document.querySelector('[data-act="ttime-any"]'); if (any) any.classList.toggle("on", x.time < 0); }
+    else x[f] = el.value;
+    const pv = document.getElementById("tk-pv"); if (pv) pv.textContent = P.sentence(x);
+    const sv = document.getElementById("tk-save"); if (sv) sv.disabled = !x.title.trim();
+  }
+  if (el.id === "pl-win") ui.win = el.value;
+  if (el.id === "s-name") { data.settings.userName = el.value; save(); }
+  if (el.id === "s-focus") { data.settings.focusLimit = +el.value; document.getElementById("s-fl").textContent = el.value; save(); }
+  if (el.id === "s-paste") ui.importText = el.value;
+});
+document.addEventListener("change", e => {
+  if (e.target.id === "s-file" && e.target.files[0]) { const fr = new FileReader(); fr.onload = () => doImport(String(fr.result)); fr.readAsText(e.target.files[0]); }
+});
+function doImport(text) {
+  try {
+    const o = JSON.parse(text);
+    if (o.format !== "enso-habits") throw new Error("This is not an Ensō Habits backup file.");
+    data = normalize(o); ui.importText = ""; applyTheme(); save(); goTab("today"); toast("Backup restored");
+  } catch (err) { toast(err.message && err.message.includes("Ensō") ? err.message : "That text isn't a valid backup. Paste the whole file, starting with {."); }
+}
+
+/* ===================== Boot ===================== */
+const local = readLocal();
+data = local ? normalize(local) : sampleData();
+applyTheme();
+render();
+tick();
+connect();
+})();
+</script>
