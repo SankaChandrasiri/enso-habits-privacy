@@ -36,6 +36,8 @@
 :root[data-accent="3"] { --primary: light-dark(#A8476A, #F2B3C6); --on-primary: light-dark(#FFFFFF, #4A1027); --primary-soft: light-dark(#F9DEE6, #6E2A44); --on-primary-soft: light-dark(#3D1022, #F9DEE6) }
 :root[data-accent="4"] { --primary: light-dark(#8A6410, #EBC56F); --on-primary: light-dark(#FFFFFF, #3A2900); --primary-soft: light-dark(#F5E6BF, #5A4000); --on-primary-soft: light-dark(#2E2000, #F5E6BF) }
 :root[data-accent="5"] { --primary: light-dark(#4B5B73, #B8C4D8); --on-primary: light-dark(#FFFFFF, #1C2636); --primary-soft: light-dark(#DEE4EE, #344054); --on-primary-soft: light-dark(#18212F, #DEE4EE) }
+/* Everything that isn't a habit's own colour, a celebration (gold) or a warning to delete (red) follows the theme colour. */
+:root:root:root { --teal: var(--primary); --warn: var(--primary); accent-color: var(--primary) }
 
 * { box-sizing: border-box }
 html, body { min-height: 100% }
